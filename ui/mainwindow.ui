@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindowDesign</class>
+ <widget class="QMainWindow" name="MainWindowDesign">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <!--<width>1359</width>
+    <height>741</height>-->
+    <width>1359</width>
+    <height>741</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>QRosApp</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resources/images.qrc">
+    <normaloff>:/images/icon.png</normaloff>:/images/icon.png</iconset>
+  </property>
+  <property name="locale">
+   <locale language="English" country="Australia"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+  <!--
+   <widget class="QLCDNumber" name="s_2">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>498</y>
+      <width>80</width>
+      <height>40</height>
+     </rect>
+    </property>
+   </widget>
+   -->
+<!--
+   <widget class="QSlider" name="horizontalSlider_8">
+    <property name="geometry">
+     <rect>
+      <x>872</x>
+      <y>504</y>
+      <width>187</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_2">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>460</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="min_v_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>672</y>
+      <width>76</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string>HIGH_V</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_4">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>560</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_6">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>410</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+-->
+<!--
+
+   <widget class="QSlider" name="horizontalSlider_10">
+    <property name="geometry">
+     <rect>
+      <x>872</x>
+      <y>588</y>
+      <width>187</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="max_h_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>462</y>
+      <width>76</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="text">
+     <string>LOW_H</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>510</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>z_diff</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>460</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>high_depth</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="max_s_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>504</y>
+      <width>76</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string>LOW_S</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>610</y>
+      <width>71</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>in_center</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_8">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>510</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>510</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>low_depth</string>
+    </property>
+   </widget>
+-->
+
+<!--이진화이미지-->
+   <widget class="QLabel" name="test">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>10</y>
+      <width>640</width>
+      <height>360</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+
+<!--
+   <widget class="QLCDNumber" name="m_7">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>460</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="min_h_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>588</y>
+      <width>76</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string>HIGH_H</string>
+    </property>
+   </widget>
+-->
+<!--원본이미지-->
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>10</y>
+      <width>640</width>
+      <height>360</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+
+<!--
+   <widget class="QSlider" name="horizontalSlider_11">
+    <property name="geometry">
+     <rect>
+      <x>872</x>
+      <y>630</y>
+      <width>187</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="s_4">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>583</y>
+      <width>80</width>
+      <height>40</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="s_1">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>454</y>
+      <width>80</width>
+      <height>40</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="min_s_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>630</y>
+      <width>76</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string>HIGH_S</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="horizontalSlider_7">
+    <property name="geometry">
+     <rect>
+      <x>872</x>
+      <y>462</y>
+      <width>187</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_1">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>410</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>560</y>
+      <width>51</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>in_cam</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>410</y>
+      <width>111</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>center_depth</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_5">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>610</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="s_3">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>541</y>
+      <width>80</width>
+      <height>40</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QSlider" name="horizontalSlider_9">
+    <property name="geometry">
+     <rect>
+      <x>872</x>
+      <y>546</y>
+      <width>187</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="s_5">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>626</y>
+      <width>80</width>
+      <height>40</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="s_6">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>670</y>
+      <width>80</width>
+      <height>40</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="max_v_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>546</y>
+      <width>76</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string>LOW_V</string>
+    </property>
+   </widget>
+-->
+<!--
+   <widget class="QSlider" name="horizontalSlider_12">
+    <property name="geometry">
+     <rect>
+      <x>872</x>
+      <y>672</y>
+      <width>187</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="m_3">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>510</y>
+      <width>91</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>410</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>x_diff</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>460</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>y_diff</string>
+    </property>
+   </widget>
+-->
+
+   <widget class="QLabel" name="display_3">
+    <property name="geometry">
+      <rect>
+      <!--<x>1360</x>
+        <y>10</y> -->
+        <x>20</x>        <!-- X 좌표 -->
+        <y>780</y>       <!-- Y 좌표 -->
+        <width>640</width>  <!-- 너비 -->
+        <height>360</height> <!-- 높이 -->
+      </rect>
+    </property>
+    <property name="frameShape">
+      <enum>QFrame::Box</enum>  <!-- 테두리 박스 -->
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+  </widget>
+  <widget class="QLabel" name="display_4">
+    <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>390</y>
+     <width>640</width>
+     <height>360</height>
+    </rect>
+    </property>
+    <property name="frameShape">
+    <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string>Display 4</string>
+    </property>
+  </widget>
+  <widget class="QLabel" name="display_5">
+    <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>390</y>
+     <width>640</width>
+     <height>360</height>
+    </rect>
+    </property>
+    <property name="frameShape">
+    <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string>Display 5</string>
+    </property>
+  </widget>
+  <widget class="QLabel" name="display_6">
+    <property name="geometry">
+    <rect>
+     <!--<x>1360</x>
+     <y>390</y>-->
+     <x>700</x>
+     <y>780</y>
+     <width>640</width>
+     <height>360</height>
+    </rect>
+    </property>
+    <property name="frameShape">
+    <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string>Display 6</string>
+    </property>
+  </widget>
+  </widget>
+  <action name="action_Quit">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+  </action>
+  <action name="action_Preferences">
+   <property name="text">
+    <string>&amp;Preferences</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About &amp;Qt</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../resources/images.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>action_Quit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
