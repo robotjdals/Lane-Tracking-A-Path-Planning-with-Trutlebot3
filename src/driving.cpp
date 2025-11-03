@@ -228,17 +228,15 @@ void Driving::drive(double linear_x, double angular_z){
 }
 
 void Driving::avoidanceMode() {
-  // 🚨 기존 함수는 유지 (호환성을 위해)
+
   std::cout << "⚠️ avoidanceMode() called. Use planCompleteAvoidancePath() instead." << std::endl;
 }
 
 bool Driving::followPath() {
-  // 🚨 기존 함수는 유지 (호환성을 위해)
+
   std::cout << "⚠️ followPath() called. Use executePathStep() instead." << std::endl;
   return true;
 }
-
-// 🆕 새로운 함수들 구현
 
 // 완전한 회피 경로 계획 함수
 bool Driving::planCompleteAvoidancePath() {
@@ -252,7 +250,7 @@ bool Driving::planCompleteAvoidancePath() {
     // 현재 위치
     cv::Point2f current_pos(0.0, 0.0);
 
-    // 🗺️ LiDAR 맵 업데이트
+    // LiDAR 맵 업데이트
     if(qnode && qnode->lidar_received && !qnode->lidar_ranges.empty()) {
         auto scan_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
         scan_msg->ranges = qnode->lidar_ranges;
@@ -265,7 +263,6 @@ bool Driving::planCompleteAvoidancePath() {
         std::cout << "✅ LiDAR 맵 업데이트 완료" << std::endl;
     }
 
-    // 🎯 다양한 목표점 시도 (측면 우선)
         // cv::Point2f goal = cv::Point2f(0.0, 1.2);
         cv::Point2f goal = cv::Point2f(0.6, 0.0);
         std::cout << "\n🎯 회피 목표: (" << goal.x << ", " << goal.y << ")" << std::endl;
@@ -334,7 +331,7 @@ bool Driving::planCompleteAvoidancePath() {
     return false;
 }
 
-// 매우 제한적인 재계획 조건
+
 bool Driving::shouldEmergencyReplan() {
     // 🚨 매우 예외적인 상황에서만 재계획
 
@@ -391,7 +388,6 @@ bool Driving::executePathStep() {
     }
     std::cout << ")" << std::endl;
 
-    // a_tracking 함수로 부드러운 추적
     a_tracking(current_waypoints);
 
     // 📍 다음 웨이포인트로 진행 조건 확인

@@ -230,7 +230,7 @@ cv::Point2f Astar::gridToWorld(int grid_x, int grid_y) const {
     return cv::Point2f(world_x, world_y);
 }
 
-/*
+
 std::vector<int> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path) const {
     std::vector<int> pixel_waypoints;
     for (const auto& point : world_path) {
@@ -239,7 +239,8 @@ std::vector<int> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path)
         pixel_waypoints.push_back(pixel_x);
     }
     return pixel_waypoints;
-}*/
+}
+/*
 std::vector<cv::Point> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path) const {
     std::vector<cv::Point> pixel_waypoints;
 
@@ -266,7 +267,7 @@ std::vector<cv::Point> Astar::worldToPixel(const std::vector<cv::Point2f>& world
     }
 
     return pixel_waypoints;
-}
+}*/
 
 
 
@@ -296,7 +297,8 @@ cv::Mat Astar::getVisualizationMapWithPath(const std::vector<cv::Point2f>& path)
     return color_map;
 }
 
-cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<cv::Point>& pixel_waypoints,
+/*
+cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_waypoints,
                                                     int current_index) const {
     std::lock_guard<std::mutex> lock(map_mutex);
 
@@ -350,6 +352,81 @@ cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<cv::Point>& pi
     // 정보 텍스트
     std::string info = "Waypoint: " + std::to_string(current_index + 1) + "/" + std::to_string(pixel_waypoints.size());
     cv::putText(color_map, info, cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+
+    return color_map;
+}*/
+cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_waypoints, int current_index) const {
+    std::lock_guard<std::mutex> lock(map_mutex);
+
+    // 기본 맵 (장애물 포함)
+    cv::Mat vis_map = gridmap.clone();
+    cv::Mat color_map;
+    cv::cvtColor(vis_map, color_map, cv::COLOR_GRAY2BGR);
+
+    // 로봇 위치 (중앙)
+    cv::Point robot_pos(width/2, height/2);
+    cv::circle(color_map, robot_pos, 5, cv::Scalar(255, 0, 0), -1);  // 파란색 로봇
+
+    if (pixel_waypoints.empty()) return color_map;
+
+    // 픽셀 웨이포인트를 world 좌표로 변환
+    std::vector<cv::Point2f> world_path;
+    for (size_t i = 0; i < pixel_waypoints.size(); i++) {
+        double world_x = (pixel_waypoints[i] - 320) * pixel_to_meter;
+        double world_y = i * 0.30;  // 30cm 간격
+        world_path.push_back(cv::Point2f(world_x, world_y));
+    }
+
+    // 전체 경로 그리기 (회색 - 기본)
+    for (size_t i = 1; i < world_path.size(); i++) {
+        cv::Point2i prev = worldToGrid(world_path[i-1].x, world_path[i-1].y);
+        cv::Point2i curr = worldToGrid(world_path[i].x, world_path[i].y);
+        cv::line(color_map, prev, curr, cv::Scalar(128, 128, 128), 1);  // 회색 전체 경로
+    }
+
+    // 지나온 경로 (초록색 - 완료된 부분) - current_index > 0일 때만
+    if (current_index > 0) {
+        for (size_t i = 1; i <= std::min((size_t)current_index, world_path.size()-1); i++) {
+            cv::Point2i prev = worldToGrid(world_path[i-1].x, world_path[i-1].y);
+            cv::Point2i curr = worldToGrid(world_path[i].x, world_path[i].y);
+            cv::line(color_map, prev, curr, cv::Scalar(0, 255, 0), 2);  // 초록색 완료 경로
+        }
+    }
+
+    // 웨이포인트 표시
+    for (size_t i = 0; i < world_path.size(); i++) {
+        cv::Point2i curr = worldToGrid(world_path[i].x, world_path[i].y);
+
+        if (i < (size_t)current_index) {
+            // 완료된 웨이포인트 (초록색)
+            cv::circle(color_map, curr, 4, cv::Scalar(0, 255, 0), -1);
+        } else if (i == (size_t)current_index) {
+            // 현재 목표 웨이포인트 (노란색 - 더 잘 보이게)
+            cv::circle(color_map, curr, 8, cv::Scalar(0, 255, 255), -1);  // 노란색
+            cv::circle(color_map, curr, 10, cv::Scalar(0, 200, 200), 2);
+        } else {
+            // 미래 웨이포인트 (빨간색)
+            cv::circle(color_map, curr, 4, cv::Scalar(0, 0, 255), -1);
+        }
+    }
+
+    // 정보 텍스트
+    std::string info = "Waypoint: " + std::to_string(current_index + 1) + "/" + std::to_string(pixel_waypoints.size());
+    cv::putText(color_map, info, cv::Point(10, 20),
+                cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+
+    // 색상 범례
+    std::string legend = "Green: Completed | Yellow: Current | Red: Future";
+    cv::putText(color_map, legend, cv::Point(10, 40),
+                cv::FONT_HERSHEY_SIMPLEX, 0.3, cv::Scalar(255, 255, 255), 1);
+
+    // 진행률 표시
+    if (!pixel_waypoints.empty()) {
+        double progress = (double)current_index / pixel_waypoints.size() * 100.0;
+        std::string progress_info = "Progress: " + std::to_string((int)progress) + "%";
+        cv::putText(color_map, progress_info, cv::Point(10, 60),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+    }
 
     return color_map;
 }

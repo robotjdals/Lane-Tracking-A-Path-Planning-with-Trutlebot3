@@ -34,12 +34,12 @@ public:
 
     cv::Mat getVisualizationMap() const;
     cv::Mat getVisualizationMapWithPath(const std::vector<cv::Point2f>& path = {}) const;
-    cv::Mat getVisualizationMapWithPixelPath(const std::vector<cv::Point>& pixel_waypoints, int current_index = 0) const;
+    cv::Mat getVisualizationMapWithPixelPath(const std::vector<int>& pixel_waypoints, int current_index = 0) const;
     cv::Mat getgridmap() const;
     void setVisualizationCallback(std::function<void()> callback) {
         visualization_callback = callback;
     }
-    std::vector<cv::Point> planPath(cv::Point2f start, cv::Point2f goal, int max_iterations = 2000);
+
 
     void setLanePoints(const std::vector<cv::Point2f>& left_points,
                        const std::vector<cv::Point2f>& right_points);
@@ -96,7 +96,7 @@ private:
     }
 
     cv::Point2f gridToWorld(int grid_x, int grid_y) const;
-    std::vector<cv::Point> worldToPixel(const std::vector<cv::Point2f>& world_path) const;
+    std::vector<int> worldToPixel(const std::vector<cv::Point2f>& world_path) const;
     size_t getNodeKey(int x, int y) const { return y * width + x; }
 
     static constexpr double resolution = 0.003;  // 3mm per pixel
