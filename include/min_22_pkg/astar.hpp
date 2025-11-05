@@ -28,13 +28,13 @@ public:
     Astar();
     ~Astar() = default;
 
-    std::vector<int> planPath(cv::Point2f start, cv::Point2f goal, int max_iterations = 2000);
+    std::vector<cv::Point2f> planPath(cv::Point2f start, cv::Point2f goal, int max_iterations = 2000);
     void updateMap(const sensor_msgs::msg::LaserScan::SharedPtr scan,
                    double robot_x = 0.0, double robot_y = 0.0, double robot_theta = 0.0);
 
     cv::Mat getVisualizationMap() const;
     cv::Mat getVisualizationMapWithPath(const std::vector<cv::Point2f>& path = {}) const;
-    cv::Mat getVisualizationMapWithPixelPath(const std::vector<int>& pixel_waypoints, int current_index = 0) const;
+    cv::Mat getVisualizationMapWithWorldPath(const std::vector<cv::Point2f>& path, int current_index = 0) const;
     cv::Mat getgridmap() const;
     void setVisualizationCallback(std::function<void()> callback) {
         visualization_callback = callback;
@@ -46,7 +46,7 @@ public:
     void clearLanePoints();
     std::vector<cv::Point2f> planGlobalPath(cv::Point2f start, cv::Point2f final_goal,
                                            double planning_horizon = 2.0);
-    std::vector<int> planLocalPath(cv::Point2f start, cv::Point2f local_goal,
+    std::vector<cv::Point2f> planLocalPath(cv::Point2f start, cv::Point2f local_goal,
                                   double planning_horizon = 0.8);
     cv::Point2f getLocalGoalFromGlobal(const std::vector<cv::Point2f>& global_path,
                                       cv::Point2f current_pos, double lookahead = 0.5);
@@ -79,7 +79,7 @@ private:
                                std::shared_ptr<AstarNode> neighbor,
                                cv::Point2i start, cv::Point2i goal) const;
 
-    void analyzePathQuality(const std::vector<int>& pixel_path) const;
+    void analyzePathQuality(const std::vector<cv::Point>& pixel_path) const;
 
     double euclideanHeuristic(int x1, int y1, int x2, int y2) const;
     double manhattanHeuristic(int x1, int y1, int x2, int y2) const;
@@ -96,11 +96,11 @@ private:
     }
 
     cv::Point2f gridToWorld(int grid_x, int grid_y) const;
-    std::vector<int> worldToPixel(const std::vector<cv::Point2f>& world_path) const;
+    std::vector<cv::Point> worldToPixel(const std::vector<cv::Point2f>& world_path) const;
     size_t getNodeKey(int x, int y) const { return y * width + x; }
 
     //static constexpr double resolution = 0.003;  // 3mm per pixel
-    static constexpr double resolution = 0.003;  // 3mm per pixel
+    static constexpr double resolution = 0.005;  // 3mm per pixel
     static constexpr int width = 300;            // 맵 너비
     static constexpr int height = 300;           // 맵 높이
 

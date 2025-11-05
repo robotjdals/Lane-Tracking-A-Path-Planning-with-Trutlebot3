@@ -8,11 +8,11 @@
 Astar::Astar() {
     gridmap = cv::Mat::zeros(height, width, CV_8UC1); //300x300
     visualization_callback = nullptr;
-    std::cout << "🚀 Simple & Reliable A* initialized!" << std::endl;
+    std::cout << " Simple & Reliable A* initialized!" << std::endl;
 }
 
 
-std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_iterations) {
+std::vector<cv::Point2f> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_iterations) {
     std::cout << "\n========== A* PLANNING ==========" << std::endl;
     std::cout << "Planning: (" << start.x << ", " << start.y << ") → (" << goal.x << ", " << goal.y << ")" << std::endl;
 
@@ -64,7 +64,7 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
         // 목표 도달
         if (current->x == goal_grid.x && current->y == goal_grid.y) {
             goal_node = current;
-            std::cout << "🎉 SUCCESS in " << iterations << " iterations!" << std::endl;
+            std::cout << " SUCCESS in " << iterations << " iterations!" << std::endl;
             break;
         }
 
@@ -110,16 +110,15 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
     }
 
     // 경로 재구성
-        std::vector<int> pixel_path;
+        std::vector<cv::Point2f> world_path;
 
     if (goal_node) {
-        std::vector<cv::Point2f> world_path;
         auto current = goal_node;
 
-        std::cout << "\n🔍 Path reconstruction (BEFORE reverse):" << std::endl;
+        std::cout << "\n Path reconstruction (BEFORE reverse):" << std::endl;
         int step = 0;
 
-        // 🔧 경로 수집 (목표 → 시작 순서)
+        // 경로 수집 (목표 → 시작 순서)
         while (current) {
             cv::Point2f world_pos = gridToWorld(current->x, current->y);
             world_path.push_back(world_pos);
@@ -131,10 +130,10 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
             current = current->parent;
         }
 
-        std::cout << "\n🔄 Reversing path..." << std::endl;
+        std::cout << "\n Reversing path..." << std::endl;
         std::reverse(world_path.begin(), world_path.end());
 
-        std::cout << "\n🗺️ World to Grid Waypoint Conversion:" << std::endl;
+        std::cout << "\n World to Grid Waypoint Conversion:" << std::endl;
         for (size_t i = 0; i < world_path.size(); i++) {
             const auto& point = world_path[i];
 
@@ -147,48 +146,19 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
         }
 
 
-        std::cout << "🔍 Path AFTER reverse:" << std::endl;
+        std::cout << " Path AFTER reverse:" << std::endl;
         for (size_t i = 0; i < world_path.size(); i++) {
             std::cout << "  " << i << ": (" << world_path[i].x << ", " << world_path[i].y << ")" << std::endl;
         }
 
-        // 🔧 픽셀 변환도 디버깅
-        std::cout << "\n🔍 World to Pixel conversion:" << std::endl;
-        for (size_t i = 0; i < world_path.size(); i++) {
-            const auto& point = world_path[i];
-            int pixel_x = static_cast<int>(point.x / pixel_to_meter + 320);
-            pixel_x = std::max(0, std::min(639, pixel_x));
-            pixel_path.push_back(pixel_x);
-
-            std::cout << "  " << i << ": World(" << point.x << ", " << point.y
-                      << ") → Pixel X: " << pixel_x << std::endl;
-        }
-
-        // 🔧 방향 검증
-        if (pixel_path.size() >= 2) {
-            int start_pixel = static_cast<int>(start.x / pixel_to_meter + 320);
-            int goal_pixel = static_cast<int>(goal.x / pixel_to_meter + 320);
-
-            std::cout << "\n🔍 Direction validation:" << std::endl;
-            std::cout << "  Expected start pixel: " << start_pixel << ", Actual first: " << pixel_path[0] << std::endl;
-            std::cout << "  Expected goal pixel: " << goal_pixel << ", Actual last: " << pixel_path.back() << std::endl;
-
-            bool correct_direction = (abs(pixel_path[0] - start_pixel) < abs(pixel_path[0] - goal_pixel));
-            std::cout << "  Direction check: " << (correct_direction ? "✅ CORRECT" : "❌ REVERSED") << std::endl;
-        }
-
-        std::cout << "📊 Final pixel path: ";
-        for (size_t i = 0; i < std::min((size_t)10, pixel_path.size()); i++) {
-            std::cout << pixel_path[i] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "==========================================\n" << std::endl;
+    return world_path;
 
     } else {
-        std::cout << "❌ No path found" << std::endl;
+        std::cout << " No path found" << std::endl;
+        return {};
     }
 
-    std::cout << "==========================================\n" << std::endl;
-    return pixel_path;
 }
 
 
@@ -215,14 +185,14 @@ void Astar::updateMap(const sensor_msgs::msg::LaserScan::SharedPtr scan, double 
 
         cv::Point2i grid_pos = worldToGrid(world_x, world_y);
 
-        std::cout << "--- 🗺️ 좌표 변환 디버깅 결과 ---" << std::endl;
+        std::cout << "---  좌표 변환 디버깅 결과 ---" << std::endl;
         std::cout << "  > Input (R, Theta): " << range << " m, " << std::abs(angle) * 180.0 / M_PI << " deg" << std::endl;
         std::cout << "  1. 로봇좌표 (rx, ry): (" << rx << ", " << ry << ")" << std::endl;
         std::cout << "  2. 회전벡터 (wx, wy): (" << wx << ", " << wy << ")" << std::endl;
         std::cout << "  3. 월드좌표 (World_x, World_y): (" << world_x << " m, " << world_y << " m)" << std::endl;
         std::cout << "  4. 그리드좌표 (Grid_x, Grid_y): (" << grid_pos.x << ", " << grid_pos.y << ")" << std::endl;
         std::cout << "----------------------------------" << std::endl;
-
+/*
         int inflation_radius = 5; // 확장할 픽셀 수 (예: 5픽셀)
 
         for (int dy = -inflation_radius; dy <= inflation_radius; dy++) {
@@ -236,7 +206,7 @@ void Astar::updateMap(const sensor_msgs::msg::LaserScan::SharedPtr scan, double 
                 gridmap.at<uchar>(check_y, check_x) = 255;
             }
             }
-        }
+        }*/
 
         if (grid_pos.x >= 0 && grid_pos.x < width && grid_pos.y >= 0 && grid_pos.y < height) {
             cv::circle(gridmap, grid_pos, 8, 255, -1);  // 작은 장애물
@@ -260,45 +230,28 @@ cv::Point2f Astar::gridToWorld(int grid_x, int grid_y) const {
     return cv::Point2f(world_x, world_y);
 }
 
-
-std::vector<int> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path) const {
-    std::vector<int> pixel_waypoints;
-    for (const auto& point : world_path) {
-        int pixel_x = static_cast<int>(point.x / pixel_to_meter + 320);
-        pixel_x = std::max(0, std::min(639, pixel_x));
-        pixel_waypoints.push_back(pixel_x);
-    }
-    return pixel_waypoints;
-
-}
-/*
 std::vector<cv::Point> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path) const {
     std::vector<cv::Point> pixel_waypoints;
 
-    std::cout << "\n🔍 World to Pixel XY conversion:" << std::endl;
+    // 이 함수는 '월드 좌표'를 '이미지 픽셀 좌표' (640x480)로 변환합니다.
 
-    for (size_t i = 0; i < world_path.size(); i++) {
-        const auto& point = world_path[i];
-
-        // X, Y 모두 변환
+    for (const auto& point : world_path) {
+        // X 변환: 월드 X를 픽셀 X로 변환 (중앙 320 기준)
         int pixel_x = static_cast<int>(point.x / pixel_to_meter + 320);
+
+        // Y 변환: 월드 Y를 픽셀 Y로 변환 (일반적으로 Y축 반전 필요, 중앙 240 기준)
+        // 맵 좌표계가 전방 Y축 증가라면, 이미지 좌표계는 하향 Y축 증가이므로 반전 (-pixel_to_meter)
         int pixel_y = static_cast<int>(point.y / (-pixel_to_meter) + 240);
 
+        // 픽셀 범위 (640x480) 제한
         pixel_x = std::max(0, std::min(639, pixel_x));
         pixel_y = std::max(0, std::min(479, pixel_y));
 
         pixel_waypoints.push_back(cv::Point(pixel_x, pixel_y));
-
-        if (i < 5 || i >= world_path.size() - 3) {
-            std::cout << "  " << i << ": World(" << point.x << ", " << point.y
-                      << ") → Pixel(" << pixel_x << ", " << pixel_y << ")" << std::endl;
-        } else if (i == 5) {
-            std::cout << "  ... (생략) ..." << std::endl;
-        }
     }
 
     return pixel_waypoints;
-}*/
+}
 
 
 
@@ -386,7 +339,7 @@ cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_wa
 
     return color_map;
 }*/
-cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_waypoints, int current_index) const {
+cv::Mat Astar::getVisualizationMapWithWorldPath(const std::vector<cv::Point2f>& path, int current_index) const {
     std::lock_guard<std::mutex> lock(map_mutex);
 
     // 기본 맵 (장애물 포함)
@@ -398,24 +351,18 @@ cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_wa
     cv::Point robot_pos(width/2, height/2);
     cv::circle(color_map, robot_pos, 5, cv::Scalar(255, 0, 0), -1);  // 파란색 로봇
 
-    if (pixel_waypoints.empty()) return color_map;
+    if (path.empty()) return color_map;
 
-    // 픽셀 웨이포인트를 world 좌표로 변환
-    std::vector<cv::Point2f> world_path;
-    for (size_t i = 0; i < pixel_waypoints.size(); i++) {
-        double world_x = (pixel_waypoints[i] - 320) * pixel_to_meter;
-        double world_y = i * 0.30;  // 30cm 간격
-        world_path.push_back(cv::Point2f(world_x, world_y));
-    }
+    const std::vector<cv::Point2f>& world_path = path;
 
-    // 전체 경로 그리기 (회색 - 기본)
+    // 전체 경로 그리기
     for (size_t i = 1; i < world_path.size(); i++) {
         cv::Point2i prev = worldToGrid(world_path[i-1].x, world_path[i-1].y);
         cv::Point2i curr = worldToGrid(world_path[i].x, world_path[i].y);
         cv::line(color_map, prev, curr, cv::Scalar(128, 128, 128), 1);  // 회색 전체 경로
     }
 
-    // 지나온 경로 (초록색 - 완료된 부분) - current_index > 0일 때만
+    // 지나온 경로
     if (current_index > 0) {
         for (size_t i = 1; i <= std::min((size_t)current_index, world_path.size()-1); i++) {
             cv::Point2i prev = worldToGrid(world_path[i-1].x, world_path[i-1].y);
@@ -442,7 +389,7 @@ cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_wa
     }
 
     // 정보 텍스트
-    std::string info = "Waypoint: " + std::to_string(current_index + 1) + "/" + std::to_string(pixel_waypoints.size());
+    std::string info = "Waypoint: " + std::to_string(current_index + 1) + "/" + std::to_string(world_path.size());
     cv::putText(color_map, info, cv::Point(10, 20),
                 cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
 
@@ -452,8 +399,8 @@ cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_wa
                 cv::FONT_HERSHEY_SIMPLEX, 0.3, cv::Scalar(255, 255, 255), 1);
 
     // 진행률 표시
-    if (!pixel_waypoints.empty()) {
-        double progress = (double)current_index / pixel_waypoints.size() * 100.0;
+    if (!path.empty()) {
+        double progress = (double)current_index / world_path.size() * 100.0;
         std::string progress_info = "Progress: " + std::to_string((int)progress) + "%";
         cv::putText(color_map, progress_info, cv::Point(10, 60),
                     cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
@@ -463,9 +410,9 @@ cv::Mat Astar::getVisualizationMapWithPixelPath(const std::vector<int>& pixel_wa
 }
 
 std::vector<cv::Point2f> Astar::planGlobalPath(cv::Point2f start, cv::Point2f final_goal, double planning_horizon) {
-    std::vector<int> pixel_path = planPath(start, final_goal, 1000);
+    std::vector<cv::Point2f> path = planPath(start, final_goal, 1000);
 
-    if(pixel_path.empty()) {
+    if(path.empty()) {
         return {};
     }
 
@@ -473,42 +420,36 @@ std::vector<cv::Point2f> Astar::planGlobalPath(cv::Point2f start, cv::Point2f fi
 
     double waypoint_interval = 0.30;  // 30cm 간격 (큰 스텝)
 
-    for(size_t i = 0; i < pixel_path.size(); i += 5) {  // 🔧 5개마다 하나씩 (더 간격 벌림)
-        double world_x = (pixel_path[i] - 320) * pixel_to_meter;
-        double world_y = i * waypoint_interval * 0.01;  // y는 인덱스에 비례
+    for(size_t i = 0; i < path.size(); i+=5) {  //5개마다 하나씩 (더 간격 벌림)
+        double world_x = path[i].x;
+        double world_y = path[i].y;
         global_path.push_back(cv::Point2f(world_x, world_y));
 
         if(world_y >= planning_horizon) break;
     }
 
-    std::cout << "📊 Optimized Path:" << std::endl;
-    std::cout << "   Original pixels: " << pixel_path.size() << std::endl;
+    std::cout << " Optimized Path:" << std::endl;
+    std::cout << "   Original pixels: " << path.size() << std::endl;
     std::cout << "   Final waypoints: " << global_path.size() << std::endl;
     std::cout << "   Waypoint interval: " << waypoint_interval << "m" << std::endl;
-
-    // 🔍 경로 미리보기 (픽셀)
-    std::cout << "   Sampled pixels: ";
-    for(size_t i = 0; i < global_path.size() && i < 10; i++) {
-        int sample_pixel = static_cast<int>(global_path[i].x / pixel_to_meter + 320);
-        std::cout << sample_pixel << " ";
-    }
-    std::cout << std::endl;
 
     return global_path;
 }
 
-std::vector<int> Astar::planLocalPath(cv::Point2f start, cv::Point2f local_goal, double planning_horizon) {
-    std::vector<int> full_path = planPath(start, local_goal, 500);
+std::vector<cv::Point2f> Astar::planLocalPath(cv::Point2f start, cv::Point2f local_goal, double planning_horizon) {
+    std::vector<cv::Point2f> full_path_world = planPath(start, local_goal, 500);
 
-    if (full_path.empty()) return {};
+    if (full_path_world.empty()) return {};
+
+    std::vector<cv::Point> full_path = worldToPixel(full_path_world);
 
     // 🔧 로컬 경로도 간소화 (2개마다 하나씩)
-    std::vector<int> simplified_path;
+    std::vector<cv::Point2f> simplified_path;
     for (size_t i = 0; i < full_path.size(); i += 2) {
         simplified_path.push_back(full_path[i]);
     }
 
-    std::cout << "📊 Local Path: " << full_path.size() << " → " << simplified_path.size() << " waypoints" << std::endl;
+    std::cout << " Local Path: " << full_path.size() << " → " << simplified_path.size() << " waypoints" << std::endl;
 
     return simplified_path;
 }

@@ -30,7 +30,7 @@ class Driving : public QObject {
   static constexpr double b = 0.16;
   double current_speed;
 
-  std::vector<int>a_waypoints;
+  std::vector<cv::Point2f>a_waypoints;
   cv::Point2f start, goal;
   int current_path_index = 0;
   Current_state state = LANE_TRACKING;
@@ -43,17 +43,17 @@ class Driving : public QObject {
   cv::Point2f saved_avoidance_goal;                       // 저장된 회피 목표점
 
   // 시각화를 위한 현재 목표 웨이포인트 정보 제공
-  int getCurrentTargetWaypoint() const {
+  cv::Point getCurrentTargetWaypoint() const {
     if (current_path_index < a_waypoints.size()) {
       return a_waypoints[current_path_index];
     }
-    return -1; // 유효하지 않은 값
+    return cv::Point(-1, -1); // 유효하지 않은 값
   }
 
  public Q_SLOTS:
   void go(const std::vector<int>& waypoints);
   void tracking(const std::vector<int>& waypoints);
-  void a_tracking(const std::vector<int>& waypoints);
+  void a_tracking(const cv::Point2f& pixel_target);
   double angular_velocity(double R, double v);
   double R_track(double L, int x);
   double Look_aheadDistance(double v);

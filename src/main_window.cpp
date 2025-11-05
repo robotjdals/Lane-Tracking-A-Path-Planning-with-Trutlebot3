@@ -105,12 +105,9 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
       cv::Mat grid_map;
 
       // A* 경로가 있으면 경로와 함께 표시
-      if(driving && !driving->a_waypoints.empty() && driving->state == Driving::AVOIDANCE) {
+      if(driving->global_path_ready && driving->state == Driving::AVOIDANCE) {
         // 🎨 새 시각화 함수 사용 (픽셀 경로 + 현재 인덱스)
-        grid_map = a_planner->getVisualizationMapWithPixelPath(
-            driving->a_waypoints,
-            driving->current_path_index
-        );
+        grid_map = a_planner->getVisualizationMapWithWorldPath(driving->a_waypoints, driving->current_path_index);
       } else {
         grid_map = a_planner->getVisualizationMap();
       }
