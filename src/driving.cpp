@@ -264,7 +264,7 @@ bool Driving::planCompleteAvoidancePath() {
     }
 
         // cv::Point2f goal = cv::Point2f(0.0, 1.2);
-        cv::Point2f goal = cv::Point2f(0.6, 0.0);
+        cv::Point2f goal = cv::Point2f(0.0, 1.0);
         std::cout << "\n🎯 회피 목표: (" << goal.x << ", " << goal.y << ")" << std::endl;
 
         std::vector<int> path = a_planner->planPath(current_pos, goal, 2000);
@@ -388,7 +388,7 @@ bool Driving::executePathStep() {
     }
     std::cout << ")" << std::endl;
 
-    a_tracking(current_waypoints);
+    tracking(current_waypoints);
 
     // 📍 다음 웨이포인트로 진행 조건 확인
     int target_x = a_waypoints[current_path_index];

@@ -27,18 +27,14 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
         return {};
     }
 
-    // 🔧 헤더의 AstarNode 사용 (SimpleNode 제거)
     auto cmp = [](std::shared_ptr<AstarNode> a, std::shared_ptr<AstarNode> b) {
         return a->f_cost > b->f_cost;
     };
-    std::priority_queue<std::shared_ptr<AstarNode>,
-                        std::vector<std::shared_ptr<AstarNode>>,
-                        decltype(cmp)> open_set(cmp);
+    std::priority_queue<std::shared_ptr<AstarNode>, std::vector<std::shared_ptr<AstarNode>>, decltype(cmp)> open_set(cmp);
 
     // 방문 체크 (shared_ptr 사용)
     std::vector<std::vector<bool>> visited(width, std::vector<bool>(height, false));
-    std::vector<std::vector<std::shared_ptr<AstarNode>>> nodes(width,
-        std::vector<std::shared_ptr<AstarNode>>(height, nullptr));
+    std::vector<std::vector<std::shared_ptr<AstarNode>>> nodes(width, std::vector<std::shared_ptr<AstarNode>>(height, nullptr));
 
     // 시작 노드 생성
     double h_start = std::abs(goal_grid.x - start_grid.x) + std::abs(goal_grid.y - start_grid.y);
@@ -81,15 +77,14 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
             if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
             if (visited[nx][ny]) continue;
 
-            // 🔧 개선된 3x3 영역 충돌 검사
+            // 3x3 영역 충돌 검사
             bool collision = false;
             for(int dy = -1; dy <= 1; dy++) {
                 for(int dx = -1; dx <= 1; dx++) {
                     int check_x = nx + dx;
                     int check_y = ny + dy;
 
-                    if(check_x >= 0 && check_x < width &&
-                       check_y >= 0 && check_y < height) {
+                    if(check_x >= 0 && check_x < width && check_y >= 0 && check_y < height) {
                         if(gridmap.at<uchar>(check_y, check_x) > 0) {
                             collision = true;
                             break;
@@ -139,6 +134,19 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
         std::cout << "\n🔄 Reversing path..." << std::endl;
         std::reverse(world_path.begin(), world_path.end());
 
+        std::cout << "\n🗺️ World to Grid Waypoint Conversion:" << std::endl;
+        for (size_t i = 0; i < world_path.size(); i++) {
+            const auto& point = world_path[i];
+
+            // worldToGrid 함수를 사용하여 그리드 좌표를 얻습니다.
+            cv::Point2i grid_pos = worldToGrid(point.x, point.y);
+
+            std::cout << "  Waypoint " << i << ": World(" << point.x << ", " << point.y
+                      << ") → Grid(" << grid_pos.x << ", " << grid_pos.y << ")" << std::endl;
+
+        }
+
+
         std::cout << "🔍 Path AFTER reverse:" << std::endl;
         for (size_t i = 0; i < world_path.size(); i++) {
             std::cout << "  " << i << ": (" << world_path[i].x << ", " << world_path[i].y << ")" << std::endl;
@@ -184,8 +192,7 @@ std::vector<int> Astar::planPath(cv::Point2f start, cv::Point2f goal, int max_it
 }
 
 
-void Astar::updateMap(const sensor_msgs::msg::LaserScan::SharedPtr scan,
-                      double robot_x, double robot_y, double robot_theta) {
+void Astar::updateMap(const sensor_msgs::msg::LaserScan::SharedPtr scan, double robot_x, double robot_y, double robot_theta) {
     std::lock_guard<std::mutex> lock(map_mutex);
 
     if (!scan || scan->ranges.empty()) return;
@@ -204,9 +211,32 @@ void Astar::updateMap(const sensor_msgs::msg::LaserScan::SharedPtr scan,
         double wx = rx * c - ry * s;
         double wy = rx * s + ry * c;
         double world_x = robot_x + wy;
-        double world_y = robot_y + wx;
+        double world_y = robot_y + (wx);
 
         cv::Point2i grid_pos = worldToGrid(world_x, world_y);
+
+        std::cout << "--- 🗺️ 좌표 변환 디버깅 결과 ---" << std::endl;
+        std::cout << "  > Input (R, Theta): " << range << " m, " << std::abs(angle) * 180.0 / M_PI << " deg" << std::endl;
+        std::cout << "  1. 로봇좌표 (rx, ry): (" << rx << ", " << ry << ")" << std::endl;
+        std::cout << "  2. 회전벡터 (wx, wy): (" << wx << ", " << wy << ")" << std::endl;
+        std::cout << "  3. 월드좌표 (World_x, World_y): (" << world_x << " m, " << world_y << " m)" << std::endl;
+        std::cout << "  4. 그리드좌표 (Grid_x, Grid_y): (" << grid_pos.x << ", " << grid_pos.y << ")" << std::endl;
+        std::cout << "----------------------------------" << std::endl;
+
+        int inflation_radius = 5; // 확장할 픽셀 수 (예: 5픽셀)
+
+        for (int dy = -inflation_radius; dy <= inflation_radius; dy++) {
+            for (int dx = -inflation_radius; dx <= inflation_radius; dx++) {
+                int check_x = grid_pos.x + dx;
+                int check_y = grid_pos.y + dy;
+
+        // 범위 체크 (width, height 내에 있는지)
+            if (check_x >= 0 && check_x < width && check_y >= 0 && check_y < height) {
+                // 장애물 값(255)으로 설정
+                gridmap.at<uchar>(check_y, check_x) = 255;
+            }
+            }
+        }
 
         if (grid_pos.x >= 0 && grid_pos.x < width && grid_pos.y >= 0 && grid_pos.y < height) {
             cv::circle(gridmap, grid_pos, 8, 255, -1);  // 작은 장애물
@@ -239,6 +269,7 @@ std::vector<int> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path)
         pixel_waypoints.push_back(pixel_x);
     }
     return pixel_waypoints;
+
 }
 /*
 std::vector<cv::Point> Astar::worldToPixel(const std::vector<cv::Point2f>& world_path) const {

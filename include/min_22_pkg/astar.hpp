@@ -99,8 +99,8 @@ private:
     std::vector<int> worldToPixel(const std::vector<cv::Point2f>& world_path) const;
     size_t getNodeKey(int x, int y) const { return y * width + x; }
 
+    //static constexpr double resolution = 0.003;  // 3mm per pixel
     static constexpr double resolution = 0.003;  // 3mm per pixel
-    // static constexpr double resolution = 10000.0 / 18.0;  // 3mm per pixel
     static constexpr int width = 300;            // 맵 너비
     static constexpr int height = 300;           // 맵 높이
 
