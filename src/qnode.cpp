@@ -1,23 +1,8 @@
-/**
- * @file /src/qnode.cpp
- *
- * @brief Ros communication central!
- *
- * @date January 2025
- **/
-
-/*****************************************************************************
-** Includes
-*****************************************************************************/
-
 #include "../include/min_22_pkg/qnode.hpp"
-// tf2 헤더 대신 기본 수학 라이브러리 사용
-// #include <tf2/LinearMath/Quaternion.h>
-// #include <tf2/LinearMath/Matrix3x3.h>
-#include <cmath>
-#include <algorithm> // std::min, std::max
 
-//bool QNode::ros_initialized = false;
+#include <cmath>
+#include <algorithm>
+
 
 QNode::QNode() {
 
@@ -34,8 +19,6 @@ QNode::QNode() {
 
 void QNode::initPubSub() {
   image_sub_ = node->create_subscription<sensor_msgs::msg::Image>("/camera/image_raw", 10, std::bind(&QNode::callbackImage, this, std::placeholders::_1));
-  // depth_image_sub_ = node->create_subscription<sensor_msgs::msg::Image>("camera/aligned_depth_to_color/image_raw", 10, std::bind(&QNode::callbackDepth, this, std::placeholders::_1));
-  // camera_info_sub_ = node->create_subscription<sensor_msgs::msg::CameraInfo>("camera/aligned_depth_to_color/camera_info", 10, std::bind(&QNode::callbackCameraInfo, this, std::placeholders::_1));
 
   odom_sub_ = node->create_subscription<nav_msgs::msg::Odometry>("/odom", 10,  std::bind(&QNode::callbackOdom, this, std::placeholders::_1));
   cmd_vel_pub_ = node->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
@@ -43,9 +26,7 @@ void QNode::initPubSub() {
 }
 
 QNode::~QNode() {
-  std::cout << "QNode destructor called" << std::endl;  // 디버그 추가
-
-  running_ = false;  // 스레드 종료 신호
+  running_ = false;
 
   if (this->isRunning()) {
     this->quit();
@@ -57,38 +38,24 @@ QNode::~QNode() {
 }
 
 void QNode::run() {
-    std::cout << "QNode thread started" << std::endl;  // 디버그 추가
-
   rclcpp::WallRate loop_rate(20);
-  while (running_ && rclcpp::ok()) {  // running_ 조건 추가
+  while (running_ && rclcpp::ok()) {
     try {
       rclcpp::spin_some(node);
 
-      if (!running_) break;  // 안전한 종료 체크
+      if (!running_) break;
 
       loop_rate.sleep();
     } catch (const std::exception& e) {
-      std::cout << "Error in spin: " << e.what() << std::endl;
       break;  // 에러 발생시 루프 종료
     }
   }
-
-  std::cout << "QNode thread ending" << std::endl;  // 디버그 추가
 
   if (rclcpp::ok()) {
     rclcpp::shutdown();
   }
   Q_EMIT rosShutDown();
 }
-  /*
-  rclcpp::WallRate loop_rate(20);
-  while (rclcpp::ok()) {
-    rclcpp::spin_some(node);
-    loop_rate.sleep();
-  }
-  rclcpp::shutdown();
-  Q_EMIT rosShutDown();
-  */
 
 void QNode::callbackImage(const sensor_msgs::msg::Image::SharedPtr msg_img)
 {
@@ -143,18 +110,6 @@ void QNode::callbackOdom(const nav_msgs::msg::Odometry::SharedPtr odom_msg) {
 
     odom_received = true; // Odometry 수신 완료 플래그 설정
 
-    // 🔧 로봇 위치 디버깅 출력 (매 10번째만 출력하여 스팸 방지)
-    static int debug_counter = 0;
-    if (++debug_counter % 10 == 0) {
-        std::cout << "\n🤖 ROBOT POSITION DEBUG:" << std::endl;
-        std::cout << "   World Position: (" << std::fixed << std::setprecision(6)
-                  << odom_x << ", " << odom_y << ", " << odom_yaw << ")" << std::endl;
-
-        // 참고: YAML 좌표계 변환은 A* planner에서 처리됨
-        // map2.yaml: resolution=0.00506991, origin=[1.01712, 0.0240227]
-        std::cout << "   ✅ Coordinate system managed by A* planner" << std::endl;
-    }
-
     emit speedUpdated();
 }
 
@@ -177,25 +132,6 @@ void QNode::callbackLidar(const sensor_msgs::msg::LaserScan::SharedPtr scan_msg)
   // 시그널 발생 (UI 업데이트용)
   emit lidarReceived();
 }
-/*
-bool QNode::detectObstacle(double min_distance, double angle_range) const {
-    if (!lidar_received || lidar_ranges.empty()) return false;
-
-    int center_index = lidar_ranges.size() / 2;
-    // Radian -> Index 변환 시 Angle_increment로 나누어 계산
-    int range_indices = static_cast<int>((angle_range / 2.0) / lidar_angle_increment);
-
-    int start_idx = std::max(0, center_index - range_indices);
-    int end_idx = std::min((int)lidar_ranges.size()-1, center_index + range_indices);
-
-    for (int i = start_idx; i <= end_idx; i++) {
-      float range = lidar_ranges[i];
-      if (range > 0.05 && range < min_distance && !std::isinf(range) && !std::isnan(range)) {
-          return true;
-      }
-    }
-    return false;
-}*/
 
 bool QNode::detectObstacle(double min_distance, double angle_range_rad) const {
     if (!lidar_received || lidar_ranges.empty()) return false;
@@ -282,16 +218,3 @@ float QNode::getMinObstacleDistanceInSector(double angle_center, double angle_ra
     }
     return min_dist;
 }
-
-
-/*
-// void QNode::callbackDepth(const sensor_msgs::msg::Image::SharedPtr image_msg)
-// {
-//   //... (주석 처리된 기존 코드)
-// }
-
-// void QNode::callbackCameraInfo(const sensor_msgs::msg::CameraInfo::SharedPtr info_msg)
-// {
-//   //... (주석 처리된 기존 코드)
-// }
-*/

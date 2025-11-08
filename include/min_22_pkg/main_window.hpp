@@ -1,17 +1,5 @@
-/**
- * @file /include/min_22_pkg/main_window.hpp
- *
- * @brief Qt based gui for %(package)s.
- *
- * @date August 2025
- **/
-
 #ifndef min_22_pkg_MAIN_WINDOW_H
 #define min_22_pkg_MAIN_WINDOW_H
-
-/*****************************************************************************
-** Includes
-*****************************************************************************/
 
 #include <QMainWindow>
 
@@ -19,13 +7,6 @@
 #include "driving.hpp"
 #include "astar.hpp"
 #include "ui_mainwindow.h"
-
-/*****************************************************************************
-** Interface [MainWindow]
-*****************************************************************************/
-/**
- * @brief Qt central, all operations relating to the view part here.
- */
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -37,7 +18,6 @@ class MainWindow : public QMainWindow {
   MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
 
-  // UI를 public으로 이동 (driving.cpp에서 접근 가능하도록)
   Ui::MainWindowDesign* ui;
 
   QNode* qnode;
@@ -45,9 +25,9 @@ class MainWindow : public QMainWindow {
 
   std::vector<int> current_waypoints;
 
-  cv::Mat clone_mat;   // 원본 이미지 복사
-  cv::Mat gray_clone;  // 흑백 이미지의 클론
-  int value_hsv[6];    // hsv
+  cv::Mat clone_mat;
+  cv::Mat gray_clone;
+  int value_hsv[6];
 
   static constexpr int Raw_X = 640;
   static constexpr int Raw_Y = 360;
@@ -57,34 +37,16 @@ class MainWindow : public QMainWindow {
   bool right_detected = false;
   bool left_detected = false;
 
-  // UI 제어 함수들 (driving.cpp에서 사용)
+  // UI 제어 함수들
   void showMapUI() { if (ui) ui->display_5->setVisible(true); }
   void hideMapUI() { if (ui) ui->display_5->setVisible(false); }
 
-  /*
-  #define HLS_CHANNEL 1
-  #define LAB_CHANNEL 2
-  #define H_FILTER 0
-  #define L_FILTER 1
-  #define S_FILTER 2
-  #define L_FILTER_ 0
-  #define A_FILTER_ 1
-  #define B_FILTER_ 2
-*/
-
  public Q_SLOTS:
   void slotUpdateImg();
-  // 주석처리된 함수 - 현재 사용하지 않음
-  // void slotUpdateNewImg();
   void processWaypoints();
 
   void perspective_transform(const cv::Mat& input_img, cv::Mat& output_img);
   void Gaussain_Filter(cv::Mat& img);
-
-  // 주석처리된 함수들 - 현재 사용하지 않음
-  // cv::Mat HLS_L(cv::Mat output_img);
-  // cv::Mat LAB_B(cv::Mat output_img);
-  // cv::Mat filterImg(cv::Mat input, int colorspace, int channel);
 
   cv::Mat sumImg(cv::Mat img1, cv::Mat img2);
   cv::Mat white_hsv(cv::Mat& img);
@@ -100,4 +62,4 @@ class MainWindow : public QMainWindow {
 
 };
 
-#endif  // hsv_detect_MAIN_WINDOW_H
+#endif

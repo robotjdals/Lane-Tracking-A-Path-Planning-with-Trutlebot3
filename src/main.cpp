@@ -1,7 +1,7 @@
+#include "../include/min_22_pkg/main_window.hpp"
+
 #include <QApplication>
 #include <iostream>
-
-#include "../include/min_22_pkg/main_window.hpp"
 
 int main(int argc, char* argv[])
 {
