@@ -57,6 +57,12 @@ class QNode : public QThread {
   double current_angular_z = 0.0;  // 회전 속도
   bool speed_received = false;
 
+  // 🌍 글로벌 경로 계획을 위한 Odometry 정보
+  double odom_x = 0.0;     // 로봇의 절대 X 위치 [m]
+  double odom_y = 0.0;     // 로봇의 절대 Y 위치 [m]
+  double odom_yaw = 0.0;   // 로봇의 절대 Yaw 각도 [rad]
+  bool odom_received = false; // Odometry 수신 여부 플래그
+
   std::vector<float> lidar_ranges;
   float lidar_angle_min;
   float lidar_angle_max;
@@ -66,6 +72,7 @@ class QNode : public QThread {
   bool detectObstacle(double min_distance = 0.5, double angle_range = 0.52) const;
   bool detectObstacleInSector(double min_distance, double angle_center, double angle_range) const;
   float getMinObstacleDistance(double angle_range = 0.52) const;
+  float getMinObstacleDistanceInSector(double angle_center, double angle_range) const;
 
   void drive(double linear_x, double angular_z);
 

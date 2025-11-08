@@ -1,6 +1,8 @@
 #include "../include/min_22_pkg/main_window.hpp"
 #include "../include/min_22_pkg/driving.hpp"
-
+#include <iostream>
+#include <filesystem>
+#include <vector>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindowDesign) {
   ui->setupUi(this);
@@ -19,6 +21,103 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
   prev_left_x = 0;
   prev_right_x = 0;
   first_frame = true;
+
+  std::cout << "\n========== MAP LOADING WITH YAML ==========" << std::endl;
+  std::cout << "🗺️  Loading map2.pgm with YAML configuration" << std::endl;
+  std::cout << "🌍 Gazebo Workspace: X[1.4, 1.8] Y[0.4, 1.6] meters" << std::endl;
+  std::cout << "📍 Key Positions (Gazebo):" << std::endl;
+  std::cout << "   Start (Blue):  (1.752260, 0.454965)" << std::endl;
+  std::cout << "   Goal (Red):    (1.752248, 1.519646)" << std::endl;
+  std::cout << "   Obstacle 1:    (1.490000, 0.540000)" << std::endl;
+  std::cout << "   Obstacle 2:    (1.740000, 1.000000)" << std::endl;
+  std::cout << "   Obstacle 3:    (1.490000, 1.464000)" << std::endl;
+
+  std::string yaml_path = "/home/min/colcon_ws/src/min_22_pkg/map2.yaml";
+
+  std::cout << "Loading YAML from: " << yaml_path << std::endl;
+
+  bool map_loaded = false;
+  if (a_planner->loadMapFromFile(yaml_path, 0.0, {0.0, 0.0}, 20)) {  // YAML에서 파라미터 자동 로드
+      std::cout << "✅ YAML Map loaded successfully!" << std::endl;
+      map_loaded = true;
+  }
+
+  if (!map_loaded) {
+      std::cout << "❌ YAML Map loading FAILED from all attempted paths!" << std::endl;
+
+      // YAML 기본값으로 fallback 맵 생성
+      std::cout << "\n🔧 Creating fallback map with default YAML parameters..." << std::endl;
+
+      // 기본 YAML 파라미터 (map2.yaml 기준)
+      const double default_resolution = 0.00506991;
+      const cv::Point2d default_origin(1.01712, 0.0240227);
+      const int default_width = 170;
+      const int default_height = 349;
+
+      cv::Mat test_map = cv::Mat::zeros(default_height, default_width, CV_8UC1);
+
+      // 테두리에 장애물 추가 (맵 경계)
+      cv::rectangle(test_map, cv::Rect(0, 0, default_width, 5), cv::Scalar(255), -1);       // 상단
+      cv::rectangle(test_map, cv::Rect(0, default_height-5, default_width, 5), cv::Scalar(255), -1);     // 하단
+      cv::rectangle(test_map, cv::Rect(0, 0, 5, default_height), cv::Scalar(255), -1);       // 좌측
+      cv::rectangle(test_map, cv::Rect(default_width-5, 0, 5, default_height), cv::Scalar(255), -1);     // 우측
+
+      std::cout << "📍 Adding obstacles using default coordinate system:" << std::endl;
+
+      // 기본 파라미터 기반 좌표 변환 함수
+      auto worldToGrid = [&](double world_x, double world_y) -> cv::Point2i {
+          double pixel_x = (world_x - default_origin.x) / default_resolution;
+          double pixel_y = (world_y - default_origin.y) / default_resolution;
+          int grid_x = static_cast<int>(std::round(pixel_x));
+          int grid_y = static_cast<int>(std::round(pixel_y));
+          grid_x = std::max(0, std::min(default_width-1, grid_x));
+          grid_y = std::max(0, std::min(default_height-1, grid_y));
+          return cv::Point2i(grid_x, grid_y);
+      };
+
+      // 가제보상 장애물 포즈를 그리드로 변환하여 배치
+      // 첫 번째 벽: (1.490, 0.540)
+      cv::Point2i obs1 = worldToGrid(1.490000, 0.540000);
+      cv::rectangle(test_map, cv::Rect(obs1.x-10, obs1.y-10, 20, 20), cv::Scalar(255), -1);
+      std::cout << "   Obstacle 1: World(1.490, 0.540) → Grid(" << obs1.x << ", " << obs1.y << ")" << std::endl;
+
+      // 두 번째 벽: (1.740, 1.000)
+      cv::Point2i obs2 = worldToGrid(1.740000, 1.000000);
+      cv::rectangle(test_map, cv::Rect(obs2.x-15, obs2.y-15, 30, 30), cv::Scalar(255), -1);
+      std::cout << "   Obstacle 2: World(1.740, 1.000) → Grid(" << obs2.x << ", " << obs2.y << ")" << std::endl;
+
+      // 세 번째 벽: (1.490, 1.464)
+      cv::Point2i obs3 = worldToGrid(1.490000, 1.464000);
+      cv::rectangle(test_map, cv::Rect(obs3.x-10, obs3.y-10, 20, 20), cv::Scalar(255), -1);
+      std::cout << "   Obstacle 3: World(1.490, 1.464) → Grid(" << obs3.x << ", " << obs3.y << ")" << std::endl;
+
+      // A* 플래너에 기본 파라미터로 설정
+      a_planner->gridmap = test_map.clone();
+      a_planner->W_ = default_width;
+      a_planner->H_ = default_height;
+      a_planner->res_ = default_resolution;
+      a_planner->origin_m_ = default_origin;
+
+      std::cout << "✅ Fallback map created with default coordinate system!" << std::endl;
+      std::cout << "   Resolution: " << a_planner->res_ << " m/pixel" << std::endl;
+      std::cout << "   Origin: (" << a_planner->origin_m_.x << ", " << a_planner->origin_m_.y << ")" << std::endl;
+      std::cout << "   Map coverage: X[" << default_origin.x << " to " << (default_origin.x + default_width * default_resolution) << "], ";
+      std::cout << "Y[" << default_origin.y << " to " << (default_origin.y + default_height * default_resolution) << "]" << std::endl;
+  } else {
+      // 실제 YAML 맵이 로딩된 경우 파라미터 확인
+      std::cout << "✅ YAML Map loaded successfully!" << std::endl;
+      std::cout << "📏 Loaded map size: " << a_planner->W_ << "x" << a_planner->H_
+                << " pixels (" << (a_planner->W_ * a_planner->res_) << "x" << (a_planner->H_ * a_planner->res_) << " meters)" << std::endl;
+      std::cout << "📍 Map coverage: X[" << a_planner->origin_m_.x
+                << " to " << (a_planner->origin_m_.x + a_planner->W_ * a_planner->res_)
+                << "], Y[" << a_planner->origin_m_.y
+                << " to " << (a_planner->origin_m_.y + a_planner->H_ * a_planner->res_) << "]" << std::endl;
+      std::cout << "📐 Resolution: " << a_planner->res_ << " m/pixel" << std::endl;
+      std::cout << "📍 Origin: (" << a_planner->origin_m_.x << ", " << a_planner->origin_m_.y << ")" << std::endl;
+  }
+
+  // 맵 시각화 UI 초기에는 숨김
+  ui->display_5->setVisible(false);
 
   QObject::connect(qnode, SIGNAL(rosShutDown()), this, SLOT(close()));
   QObject::connect(qnode, SIGNAL(sigRcvImg()), this, SLOT(slotUpdateImg()));
@@ -80,57 +179,102 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
   QImage RGB_im1((const unsigned char*)(display_img.data), display_img.cols, display_img.rows, QImage::Format_RGB888);
   ui->label->setPixmap(QPixmap::fromImage(RGB_im1));
 
-  //QImage RGB_im_test((const unsigned char*)(clone_mat.data), clone_mat.cols, clone_mat.rows, QImage::Format_RGB888);
-  //ui->display_3->setPixmap(QPixmap::fromImage(RGB_im_test));
-  static int a_update_counter = 0;
-  a_update_counter++;
 
-  int update_frequency = (driving && driving->state == Driving::AVOIDANCE) ? 1 : 3;
+  // --- 맵 시각화 및 UI 제어 로직 (상태 기반) ---
+  if (a_planner && driving) {
+    // PLANNING, PATH_TRACK, AVOIDANCE 상태일 때 맵 표시
+    bool show_map = (driving->state == Driving::PLANNING ||
+                     driving->state == Driving::PATH_TRACK ||
+                     driving->state == Driving::AVOIDANCE);
 
+    if (show_map) {
+        // UI 표시
+        ui->display_5->setVisible(true);
 
-  if (a_update_counter % update_frequency == 0 && qnode->lidar_received && !qnode->lidar_ranges.empty() && a_planner) {
-    //a_update_counter % 3 == 0 &&
-    try {
-      auto scan_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
-      scan_msg->ranges = qnode->lidar_ranges;
-      scan_msg->angle_min = qnode->lidar_angle_min;
-      scan_msg->angle_max = qnode->lidar_angle_max;
-      scan_msg->angle_increment = qnode->lidar_angle_increment;
-      scan_msg->range_min = 0.1;
-      scan_msg->range_max = 10.0;
+        cv::Mat grid_map;
 
-      a_planner->updateMap(scan_msg, 0.0, 0.0, 0.0);
-
-      // ⭐ 개선된 시각화
-      cv::Mat grid_map;
-
-      // A* 경로가 있으면 경로와 함께 표시
-      if(driving->global_path_ready && driving->state == Driving::AVOIDANCE) {
-        // 🎨 새 시각화 함수 사용 (픽셀 경로 + 현재 인덱스)
-        grid_map = a_planner->getVisualizationMapWithWorldPath(driving->a_waypoints, driving->current_path_index);
-      } else {
-        grid_map = a_planner->getVisualizationMap();
-      }
-
-      // 상태 정보 표시
-      std::string state_text = "State: ";
-      if(driving) {
-        switch(driving->state) {
-          case Driving::LANE_TRACKING: state_text += "LANE_TRACKING"; break;
-          case Driving::AVOIDANCE: state_text += "AVOIDANCE"; break;
-          case Driving::RETURN_LANE: state_text += "RETURN_LANE"; break;
+        if (driving->state == Driving::PLANNING) {
+            // 경로 계획 중일 때
+            grid_map = a_planner->getVisualizationMap();
+            std::string state_text = "State: PLANNING A* PATH...";
+            cv::putText(grid_map, state_text, cv::Point(10, grid_map.rows - 50),
+                       cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 0), 2);
         }
-      }
-      cv::putText(grid_map, state_text, cv::Point(10, grid_map.rows - 10),
-                 cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+        else if (driving->global_path_ready && !driving->path_m_.empty()) {
+            // A* 경로와 함께 시각화
+            grid_map = a_planner->getVisualizationMapWithWorldPath(driving->path_m_, driving->wp_idx_);
 
-      QImage qimg(grid_map.data, grid_map.cols, grid_map.rows, grid_map.step, QImage::Format_BGR888);
-      ui->display_5->setPixmap(QPixmap::fromImage(qimg));
+            // 상태 정보 표시
+            std::string state_text = "State: PATH_TRACKING (Progress: " +
+                                   std::to_string(driving->wp_idx_) + "/" + std::to_string(driving->path_m_.size()) + ")";
+            cv::putText(grid_map, state_text, cv::Point(10, grid_map.rows - 50),
+                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
+        } else {
+            // 기본 맵 표시
+            grid_map = a_planner->getVisualizationMap();
+            std::string state_text = "State: WAITING...";
+            cv::putText(grid_map, state_text, cv::Point(10, grid_map.rows - 50),
+                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 2);
+        }
 
-    } catch (const std::exception& e) {
-      std::cout << "Visualization error: " << e.what() << std::endl;
+        // 현재 로봇 위치를 맵에 표시 - 맵 크기에 비례하게 조정
+        if (qnode && qnode->odom_received) {
+            cv::Point2i robot_grid = a_planner->worldToGrid(qnode->odom_x, qnode->odom_y);
+
+            // 맵 크기에 따른 마커 크기 자동 조정
+            int marker_size = std::max(2, std::min(grid_map.cols, grid_map.rows) / 20);
+            int cross_size = marker_size + 5;
+
+            // 맵 경계 내에 있는지 확인
+            if (a_planner->inBounds(robot_grid.x, robot_grid.y)) {
+                // 스케일링을 고려한 큰 마커 (원본 맵에 크게 그려서 스케일링 후에도 보이도록)
+                int marker_size = std::max(8, std::min(grid_map.cols, grid_map.rows) / 15); // 더 큰 마커
+                int cross_size = marker_size + 8;
+
+                // 큰 로봇 마커 (스케일링 후에도 명확히 보이도록)
+                cv::circle(grid_map, robot_grid, marker_size, cv::Scalar(255, 100, 0), -1);     // 주황색 내부
+                cv::circle(grid_map, robot_grid, marker_size + 3, cv::Scalar(0, 255, 255), 3);  // 노란색 테두리
+                cv::circle(grid_map, robot_grid, marker_size + 6, cv::Scalar(255, 255, 255), 2); // 흰색 외곽선
+
+                // 굵은 십자가 마커
+                cv::line(grid_map, cv::Point(robot_grid.x-cross_size, robot_grid.y), cv::Point(robot_grid.x+cross_size, robot_grid.y),
+                         cv::Scalar(0, 0, 255), 4); // 굵은 빨간 수평선
+                cv::line(grid_map, cv::Point(robot_grid.x, robot_grid.y-cross_size), cv::Point(robot_grid.x, robot_grid.y+cross_size),
+                         cv::Scalar(0, 0, 255), 4); // 굵은 빨간 수직선
+
+                std::cout << "✅ Large robot marker displayed at grid (" << robot_grid.x << ", " << robot_grid.y
+                          << ") with size " << marker_size << std::endl;
+            } else {
+                std::cout << "❌ Robot is outside map bounds!" << std::endl;
+            }
+
+            // 텍스트 크기도 맵 크기에 맞게 조정
+            double text_scale = std::max(0.3, std::min(0.8, grid_map.cols / 400.0));
+            std::string odom_info = "Robot: X=" + std::to_string(qnode->odom_x).substr(0,5) +
+                                   " Y=" + std::to_string(qnode->odom_y).substr(0,5);
+            cv::putText(grid_map, odom_info, cv::Point(5, grid_map.rows - 10),
+                       cv::FONT_HERSHEY_SIMPLEX, text_scale, cv::Scalar(255, 255, 255), 1);
+        }
+
+        if (!grid_map.empty()) {
+            QImage qimg(grid_map.data, grid_map.cols, grid_map.rows, grid_map.step, QImage::Format_BGR888);
+            QPixmap pixmap = QPixmap::fromImage(qimg);
+
+            // UI 크기에 맞게 스케일링 (비율 유지)
+            QPixmap scaled_pixmap = pixmap.scaled(ui->display_5->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+            std::cout << "🖼️ Map scaling: Original(" << grid_map.cols << "x" << grid_map.rows
+                      << ") → UI(" << scaled_pixmap.width() << "x" << scaled_pixmap.height() << ")" << std::endl;
+
+            ui->display_5->setPixmap(scaled_pixmap);
+        }
+    } else {
+        // PLANNING/PATH_TRACK/AVOIDANCE 상태가 아니면 UI 숨김
+        ui->display_5->setVisible(false);
     }
   }
+  // --- 맵 시각화 및 UI 제어 로직 끝 ---
+
 
   QImage RGB_im3((const unsigned char*)(Perspective_img.data), Perspective_img.cols, Perspective_img.rows, QImage::Format_Grayscale8);
   ui->display_4->setPixmap(QPixmap::fromImage(RGB_im3));
@@ -310,7 +454,8 @@ std::vector<int> MainWindow::getWindowSearch(cv::Mat& searchimg, int& left_x, in
         //left_detection_count++;
 
         double world_x = (new_center - 320) * Driving::pixel_to_meter ;
-        double world_y = ((numwindow - 1 - i) * window_height) * Driving::pixel_to_meter;
+        // Y축은 전방 거리 (음수)로 변환
+        double world_y = -(((numwindow - 1 - i) * window_height) / (double)searchimg.rows * 1.5); // 대략적인 전방 거리 추정 (m)
         left_world_points.push_back(cv::Point2f(world_x, world_y));
 
         cv::circle(searchimg, cv::Point(new_center, window_y + window_height/2), 5, cv::Scalar(128), -1);
@@ -351,7 +496,8 @@ std::vector<int> MainWindow::getWindowSearch(cv::Mat& searchimg, int& left_x, in
         //right_detection_count++;
 
         double world_x = (new_center - 320) * Driving::pixel_to_meter;
-        double world_y = ((numwindow - 1 - i) * window_height) * Driving::pixel_to_meter;
+        // Y축은 전방 거리 (음수)로 변환
+        double world_y = -(((numwindow - 1 - i) * window_height) / (double)searchimg.rows * 1.5); // 대략적인 전방 거리 추정 (m)
         right_world_points.push_back(cv::Point2f(world_x, world_y));
 
 
@@ -404,10 +550,10 @@ std::vector<int> MainWindow::getWindowSearch(cv::Mat& searchimg, int& left_x, in
   this -> right_detected = (right_world_points.size() >= numwindow / 2);
 
   if(a_planner) {
-    std::cout << "Left detected: " << this->left_detected
-              << ", Right detected: " << this->right_detected << std::endl;
-    std::cout << "Left points: " << left_world_points.size()
-              << ", Right points: " << right_world_points.size() << std::endl;
+    //std::cout << "Left detected: " << this->left_detected
+    //          << ", Right detected: " << this->right_detected << std::endl;
+    //std::cout << "Left points: " << left_world_points.size()
+    //          << ", Right points: " << right_world_points.size() << std::endl;
 
     if(this->left_detected && this->right_detected &&
        !left_world_points.empty() && !right_world_points.empty()) {
@@ -415,8 +561,8 @@ std::vector<int> MainWindow::getWindowSearch(cv::Mat& searchimg, int& left_x, in
         //std::cout << "✅ Lane data sent to A*" << std::endl;
     } else {
         a_planner->clearLanePoints();
-        std::cout << "❌ Lane data cleared - Left:" << this->left_detected
-                  << " Right:" << this->right_detected << std::endl;
+        //std::cout << "❌ Lane data cleared - Left:" << this->left_detected
+        //          << " Right:" << this->right_detected << std::endl;
     }
 }
 

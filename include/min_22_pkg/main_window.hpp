@@ -27,7 +27,6 @@
  * @brief Qt central, all operations relating to the view part here.
  */
 
-
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
@@ -37,6 +36,10 @@ class MainWindow : public QMainWindow {
  public:
   MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
+
+  // UI를 public으로 이동 (driving.cpp에서 접근 가능하도록)
+  Ui::MainWindowDesign* ui;
+
   QNode* qnode;
   Driving* driving;
 
@@ -54,6 +57,10 @@ class MainWindow : public QMainWindow {
   bool right_detected = false;
   bool left_detected = false;
 
+  // UI 제어 함수들 (driving.cpp에서 사용)
+  void showMapUI() { if (ui) ui->display_5->setVisible(true); }
+  void hideMapUI() { if (ui) ui->display_5->setVisible(false); }
+
   /*
   #define HLS_CHANNEL 1
   #define LAB_CHANNEL 2
@@ -67,14 +74,18 @@ class MainWindow : public QMainWindow {
 
  public Q_SLOTS:
   void slotUpdateImg();
-  //void slotUpdateNewImg();
+  // 주석처리된 함수 - 현재 사용하지 않음
+  // void slotUpdateNewImg();
   void processWaypoints();
 
   void perspective_transform(const cv::Mat& input_img, cv::Mat& output_img);
   void Gaussain_Filter(cv::Mat& img);
-  //cv::Mat HLS_L(cv::Mat output_img);
-  //cv::Mat LAB_B(cv::Mat output_img);
-  //cv::Mat filterImg(cv::Mat input, int colorspace, int channel);
+
+  // 주석처리된 함수들 - 현재 사용하지 않음
+  // cv::Mat HLS_L(cv::Mat output_img);
+  // cv::Mat LAB_B(cv::Mat output_img);
+  // cv::Mat filterImg(cv::Mat input, int colorspace, int channel);
+
   cv::Mat sumImg(cv::Mat img1, cv::Mat img2);
   cv::Mat white_hsv(cv::Mat& img);
   cv::Mat yellow_hsv(cv::Mat& img);
@@ -83,7 +94,6 @@ class MainWindow : public QMainWindow {
   std::vector<int> getWindowSearch(cv::Mat& searchimg, int& left_x, int& right_x);
 
  private:
-  Ui::MainWindowDesign* ui;
   void closeEvent(QCloseEvent* event);
   cv::Mat Raw_image, Perspective_img;
   Astar* a_planner;
@@ -91,4 +101,3 @@ class MainWindow : public QMainWindow {
 };
 
 #endif  // hsv_detect_MAIN_WINDOW_H
-
