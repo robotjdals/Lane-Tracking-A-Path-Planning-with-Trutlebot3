@@ -22,10 +22,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
   prev_right_x = 0;
   first_frame = true;
 
+  //ystem_running = false;
+
   std::string yaml_path = "/home/min/colcon_ws/src/min_22_pkg/map2.yaml";
 
 
-  bool map_loaded = false;  // ← 변수 선언 추가
+  bool map_loaded = false;
   if (a_planner->loadMapFromFile(yaml_path, 0.0, {0.0, 0.0}, 26)) {  // YAML에서 파라미터 자동 로드
       map_loaded = true;
   }
@@ -82,7 +84,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
   }
 
   // 맵 시각화 UI 초기에는 숨김
-  ui->display_5->setVisible(false);
+  ui->display_3->setVisible(false);
 
   QObject::connect(qnode, SIGNAL(rosShutDown()), this, SLOT(close()));
   QObject::connect(qnode, SIGNAL(sigRcvImg()), this, SLOT(slotUpdateImg()));
@@ -105,6 +107,11 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
   std::lock_guard<std::mutex> lock(qnode->img_mutex);
   clone_mat = qnode->imgRaw->clone();                                           // 원본 이미지 복사
   cv::resize(clone_mat, clone_mat, cv::Size(640, 360), 0, 0, cv::INTER_CUBIC);  // 이미지 크기 조정
+/*
+  if (detectRedSignal()) {
+    system_running = !system_running;  // 상태 토글
+    std::cout << "🚦 System: " << (system_running ? "START ▶️" : "STOP ⏸️") << std::endl;
+  }*/
 
   cv::Mat display_img = clone_mat.clone();
   cv::Mat combine_img = clone_mat.clone();
@@ -118,7 +125,7 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
   perspective_transform(combine_img, Perspective_img);
 
   QImage RGB_im2((const unsigned char*)(Perspective_img.data), Perspective_img.cols, Perspective_img.rows, QImage::Format_Grayscale8);
-  ui->display_3->setPixmap(QPixmap::fromImage(RGB_im2));
+  //ui->display_3->setPixmap(QPixmap::fromImage(RGB_im2));
 
   cv::Mat window_img = Perspective_img.clone();
 
@@ -142,7 +149,7 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
   emit waypointsReady();
 
   QImage RGB_im1((const unsigned char*)(display_img.data), display_img.cols, display_img.rows, QImage::Format_RGB888);
-  ui->label->setPixmap(QPixmap::fromImage(RGB_im1));
+  ui->display_1->setPixmap(QPixmap::fromImage(RGB_im1));
 
 
   // --- 맵 시각화 및 UI 제어 로직 (상태 기반) ---
@@ -153,7 +160,7 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
 
     if (show_map) {
         // UI 표시
-        ui->display_5->setVisible(true);
+        ui->display_3->setVisible(true);
 
         cv::Mat grid_map;
 
@@ -180,15 +187,15 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
             QPixmap pixmap = QPixmap::fromImage(qimg);
 
             // UI 크기에 맞게 스케일링 (비율 유지)
-            QPixmap scaled_pixmap = pixmap.scaled(ui->display_5->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            QPixmap scaled_pixmap = pixmap.scaled(ui->display_3->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
             // 스케일링 디버그 출력 제거
 
-            ui->display_5->setPixmap(scaled_pixmap);
+            ui->display_3->setPixmap(scaled_pixmap);
         }
     } else {
         // PLANNING/PATH_TRACK/AVOIDANCE 상태가 아니면 UI 숨김
-        ui->display_5->setVisible(false);
+        ui->display_3->setVisible(false);
     }
   }
 
@@ -266,6 +273,28 @@ cv::Mat MainWindow::yellow_hsv(cv::Mat& img) {
 
   return binaryImage;
 }
+/*
+// 이진화
+cv::Mat MainWindow::red_hsv(cv::Mat& img) {
+  // 복사 이미지 HSV로 변환
+  cv::Mat hsvImg;
+  cv::cvtColor(img, hsvImg, cv::COLOR_BGR2HSV);
+
+  cv::Mat mask = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(1, 1));
+  cv::erode(hsvImg, hsvImg, mask, cv::Point(-1, -1), 1);
+
+  // HSV 이미지를 사용하여 범위 내의 색상을 임계값으로 설정
+  cv::Scalar lower(0, 90, 90);
+  cv::Scalar upper(100, 255, 255);
+  cv::Mat binaryImage;
+  cv::inRange(hsvImg, lower, upper, binaryImage);
+
+  //QImage RGB_im4((const unsigned char*)(binaryImage.data), binaryImage.cols, binaryImage.rows, QImage::Format_Grayscale8);
+  //ui->display_5->setPixmap(QPixmap::fromImage(RGB_im4));
+
+  return binaryImage;
+}*/
+
 
 void MainWindow::Gaussain_Filter(cv::Mat& img){
 
@@ -273,7 +302,7 @@ void MainWindow::Gaussain_Filter(cv::Mat& img){
   cv::GaussianBlur(img, blurredImage, cv::Size(7,7), 0); // 가우시안 필터
 
   QImage binaryQImage(blurredImage.data, blurredImage.cols, blurredImage.rows, blurredImage.step, QImage::Format_RGB888); // 시각화
-  ui->test->setPixmap(QPixmap::fromImage(binaryQImage));
+  ui->display_2->setPixmap(QPixmap::fromImage(binaryQImage));
 
 }
 
@@ -363,7 +392,7 @@ std::vector<int> MainWindow::getWindowSearch(cv::Mat& searchimg, int& left_x, in
         current_left_x = new_center;
         left_centers.push_back(new_center);
 
-        double world_x = (new_center - 320) * Driving::pixel_to_meter ;
+        double world_x = (320 - new_center) * Driving::pixel_to_meter ;
         // Y축은 전방 거리 (음수)로 변환
         double world_y = -(((numwindow - 1 - i) * window_height) / (double)searchimg.rows * 1.5); // 대략적인 전방 거리 추정 (m)
         left_world_points.push_back(cv::Point2f(world_x, world_y));
@@ -402,7 +431,7 @@ std::vector<int> MainWindow::getWindowSearch(cv::Mat& searchimg, int& left_x, in
         current_right_x = new_center;
         right_centers.push_back(new_center);
 
-        double world_x = (new_center - 320) * Driving::pixel_to_meter;
+        double world_x = (320 - new_center) * Driving::pixel_to_meter;
         // Y축은 전방 거리 (음수)로 변환
         double world_y = -(((numwindow - 1 - i) * window_height) / (double)searchimg.rows * 1.5); // 대략적인 전방 거리 추정 (m)
         right_world_points.push_back(cv::Point2f(world_x, world_y));
@@ -463,3 +492,21 @@ cv::Mat MainWindow::sumImg(cv::Mat img1, cv::Mat img2)
 
   return imgout;
 }
+/*
+
+bool MainWindow::detectRedSignal() {
+  if (clone_mat.empty()) return false;
+
+  static bool prev_detected = false;
+
+  cv::Mat red_mask = red_hsv(clone_mat);
+  int red_pixels = cv::countNonZero(red_mask);
+
+  bool current_detected = (red_pixels > red_detection_threshold);
+
+  // 이전에 감지 안됐다가 지금 감지됨 → true 반환 (Rising Edge)
+  bool trigger = (!prev_detected && current_detected);
+  prev_detected = current_detected;
+
+  return trigger;
+}*/

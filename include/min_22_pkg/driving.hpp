@@ -27,10 +27,12 @@ class Driving : public QObject {
   void setMainWindow(MainWindow* main_window_ptr);
   void setPlanner(Astar* planner);
 
-  static constexpr double pixel_to_meter = -0.0018;
+  static constexpr double pixel_to_meter = 0.0018;
   static constexpr double w_lim = 1.8;
   static constexpr double b = 0.16;
   double current_speed;
+  double target_speed;
+  double filtered_curvature_ = 0.0;
 
   std::vector<cv::Point2f>a_waypoints;
   cv::Point2f start, goal;
@@ -46,15 +48,19 @@ class Driving : public QObject {
   std::vector<cv::Point2f> path_m_; // 추적할 전체 경로 (월드 좌표)
   size_t wp_idx_ = 0;               // 현재 목표 웨이포인트 인덱스
   const double lookahead_ = 0.3;    // Pure Pursuit Lookahead 거리 [m]
-  const double arrive_thresh_ = 0.01; // 목표점에 도착했다고 판정할 거리 [m]
+  const double arrive_thresh_ = 0.03; // 목표점에 도착했다고 판정할 거리 [m]
 
  public Q_SLOTS:
   void go(const std::vector<int>& waypoints);
   void tracking(const std::vector<int>& waypoints);
 
+  double changedspeed(double curvature, double current_speed);
+  cv::Vec3d curve_fitting(const std::vector<cv::Point2f>& target);
   double angular_velocity(double R, double v);
-  double R_track(double L, int x);
-  double Look_aheadDistance(double v);
+  double R_track(double L, double x);
+  //double R_track(double L, int x);
+  double Look_aheadDistance(double v, double curvature);
+  //double Look_aheadDistance(double v);
   void drive(double linear_x, double angular_z);
 
   bool planCompleteAvoidancePath();

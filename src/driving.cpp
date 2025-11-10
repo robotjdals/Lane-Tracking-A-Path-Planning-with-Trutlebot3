@@ -40,14 +40,18 @@ void Driving::go(const std::vector<int>& waypoints){
   switch(state){
     case LANE_TRACKING:
     {
+      /*
+      if (!main_window->system_running) {
+        drive(0.0, 0.0);  // 정지
+        return;
+      }*/
+
       // === 1. 차선 추종 모드 ===
-      if(qnode && qnode->detectObstacle(0.5, 0.3)){
+      if(qnode && qnode->detectObstacle(0.4, 0.3)){
 
         if (main_window) {
           main_window->showMapUI();
         }
-
-        // 🎯 2단계: 로봇 정지
         stopRobot();
         state = PLANNING;
       }
@@ -59,14 +63,13 @@ void Driving::go(const std::vector<int>& waypoints){
 
     case PLANNING:
     {
-      // === 2. 경로 계획 모드 ===
       if (planCompleteAvoidancePath()) {
         state = PATH_TRACK;
         wp_idx_ = 0;
       } else {
         static int retry_count = 0;
         retry_count++;
-        if (retry_count > 10) { // 10번 실패하면 포기
+        if (retry_count > 10) {
           state = LANE_TRACKING;
           if (main_window) main_window->hideMapUI();
           retry_count = 0;
@@ -77,7 +80,6 @@ void Driving::go(const std::vector<int>& waypoints){
 
     case PATH_TRACK:
     {
-      // === 2. 경로 추종 모드 ===
       bool finished = executePathStep();
       if (finished) {
         // UI 끄기
@@ -88,57 +90,120 @@ void Driving::go(const std::vector<int>& waypoints){
         global_path_ready = false;
         has_avoidance_goal = false;
         wp_idx_ = 0;
-        qnode->drive(0.0, 0.0);
+        //qnode->drive(0.0, 0.0);
 
       }
     }
     break;
 
     case RETURN_LANE:
-{
-  static int return_counter = 0;
-  if (return_counter < 10) { // 10프레임 정도 정지 후
-    qnode->drive(0.0, 0.0);
-    return_counter++;
-  } else {
-    if (!waypoints.empty()) {
-      state = LANE_TRACKING;
-      return_counter = 0;
-      tracking(waypoints);
+    {
+      static int return_counter = 0;
+      if (return_counter < 10) { // 10프레임 정도 정지 후
+        qnode->drive(0.0, 0.0);
+        return_counter++;
+      } else {
+        if (!waypoints.empty()) {
+          state = LANE_TRACKING;
+          return_counter = 0;
+          tracking(waypoints);
+        }
+      }
     }
+    break;
   }
 }
-break;
-  }
-}
+
 
 void Driving::tracking(const std::vector<int>& waypoints){
-  int target_idx = std::min(4, (int)waypoints.size() - 1);
-  int target_waypoint = waypoints[target_idx];
-
   if(waypoints.empty()) {
     drive(0.0, 0.0);
     return;
   }
 
-  int deviation = abs(target_waypoint - 320);
+  std::vector<cv::Point2f> target_idx;
+  for (int i = 0; i < waypoints.size(); ++i) {
+  double x_px = waypoints[i];
+  double y_px = 360 - (i*36 + 18);
 
-  double base_speed = (current_speed > 0.001) ? current_speed : 0.08;
-
-  if(deviation < 10) {
-    double target_speed = std::min(0.15, base_speed + 0.002);
-    drive(target_speed, 0.0);
-  }
-  else {
-    double normalized_deviation = std::min(deviation / 320.0, 1.0);
-    double curve_factor = 1.0 - 0.3 * normalized_deviation * normalized_deviation;
-    double target_speed = std::max(0.05, base_speed * curve_factor);
-    double L = Look_aheadDistance(target_speed);
-    double R = R_track(L, target_waypoint);
-    double w = angular_velocity(R, target_speed);
-    drive(target_speed, w);
-  }
+  double x_m = (320 - x_px) * pixel_to_meter;
+  double y_m = (360 - y_px) * pixel_to_meter;
+  target_idx.push_back(cv::Point2f(x_m, y_m));
 }
+
+  cv::Vec3d coeffients = curve_fitting(target_idx);
+  double a = coeffients[0];
+  double b = coeffients[1];
+  double c = coeffients[2];
+
+  double curvature = std::abs(a);
+  target_speed = changedspeed(curvature, current_speed);
+
+
+  double L = Look_aheadDistance(target_speed, curvature);
+  std::cout<< "L "<<L<<std::endl;
+  double X_center = a*L*L + b*L + c;
+  double R = R_track(L, X_center);
+  double w = angular_velocity(R, target_speed);
+  std::cout<< "speed "<<target_speed<<std::endl;
+  drive(target_speed, w);
+}
+
+double Driving::changedspeed(double curvature, double current_speed){
+  const double min_speed = 0.08;
+  const double max_speed = 0.18;
+  const double straight = 0.01;
+  const double curve = 0.03;
+
+  double target;
+
+  if(curvature < straight){
+    target = max_speed;
+  }else if(curvature > curve){
+    target = min_speed;
+  }else {
+    double speed_factor = 1.0 - (curvature - straight) / (curve);
+    target = min_speed + (max_speed - min_speed) * speed_factor;
+  }
+
+  const double max_accel = 0.008;
+  const double max_decel = 0.025;
+
+  if (target > current_speed) {
+        // 가속
+        return std::min(target, current_speed + max_accel);
+    } else {
+        // 감속
+        return std::max(target, current_speed - max_decel);
+    }
+
+}
+
+cv::Vec3d Driving::curve_fitting(const std::vector<cv::Point2f>& target){
+
+  cv::Mat A(target.size(), 3, CV_64F);
+  cv::Mat X(target.size(), 1, CV_64F);
+
+  for (int i = 0; i < target.size(); ++i) {
+    double y = target[i].y;
+    double x = target[i].x;
+    A.at<double>(i, 0) = y*y;
+    A.at<double>(i, 1) = y;
+    A.at<double>(i, 2) = 1.0;
+    X.at<double>(i, 0) = x;
+  }
+
+  cv::Mat p;
+  cv::solve(A ,X, p, cv::DECOMP_QR);
+
+  double a = p.at<double>(0);
+  double b = p.at<double>(1);
+  double c = p.at<double>(2);
+
+
+  return cv::Vec3d(a,b,c);
+}
+
 
 double Driving::angular_velocity(double R, double v){
   if(abs(R) > 100.0) return 0.0;
@@ -147,13 +212,12 @@ double Driving::angular_velocity(double R, double v){
   return std::max(-w_lim, std::min(w_lim, w));
 }
 
-double Driving::R_track(double L, int x){
-  double y = (x - 320) * pixel_to_meter;
+double Driving::R_track(double L, double x){
 
-  if(abs(y) < 0.001) {
+  if(abs(x) < 0.01) {
     return 1000.0;
   }
-  double R = (L * L) / (2 * y);
+  double R = (L * L) / (2 * x);
   if(abs(R) > 100.0) {
     return (R > 0) ? 100.0 : -100.0;
   }
@@ -161,9 +225,24 @@ double Driving::R_track(double L, int x){
   return R;
 }
 
-double Driving::Look_aheadDistance(double v){
-  const double MIN_L = 0.16;  // 0.16m
-  const double MAX_L = 0.48;  // 0.48m
+double Driving::Look_aheadDistance(double v, double curvature){
+
+  double MIN_L, MAX_L;
+
+    std::cout<< "curvature "<<curvature<<std::endl;
+    if (curvature < 0.008) {
+        // 직선
+        MIN_L = 0.45;
+        MAX_L = 0.60;
+    } else if (curvature < 0.03) {
+        // 완만한 커브
+        MIN_L = 0.12;
+        MAX_L = 0.25;
+    } else {
+        // 급커브
+        MIN_L = 0.10;
+        MAX_L = 0.20;
+    }
 
   double L = 2 * v / w_lim;
   return std::max(MIN_L, std::min(MAX_L, L));
@@ -289,7 +368,7 @@ bool Driving::executePathStep(){
   double w = v * k;
   w = std::clamp(w, -w_lim, w_lim);
 
-  qnode->drive(v,w*1);
+  qnode->drive(v,w);
   return false;
 }
 

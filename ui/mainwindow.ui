@@ -259,7 +259,7 @@
 -->
 
 <!--이진화이미지-->
-   <widget class="QLabel" name="test">
+   <widget class="QLabel" name="display_2">
     <property name="geometry">
      <rect>
       <x>700</x>
@@ -272,7 +272,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string>display_2</string>
     </property>
    </widget>
 
@@ -318,7 +318,7 @@
    </widget>
 -->
 <!--원본이미지-->
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="display_1">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -331,7 +331,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string>display_1</string>
     </property>
    </widget>
 
@@ -597,7 +597,7 @@
    </widget>
 -->
 
-   <widget class="QLabel" name="display_3">
+   <widget class="QLabel" name="display_5">
     <property name="geometry">
       <rect>
       <!--<x>1360</x>
@@ -612,7 +612,7 @@
       <enum>QFrame::Box</enum>  <!-- 테두리 박스 -->
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string>display_5</string>
     </property>
   </widget>
   <widget class="QLabel" name="display_4">
@@ -631,7 +631,7 @@
      <string>Display 4</string>
     </property>
   </widget>
-  <widget class="QLabel" name="display_5">
+  <widget class="QLabel" name="display_3">
     <property name="geometry">
     <rect>
      <x>700</x>
@@ -644,7 +644,7 @@
     <enum>QFrame::Box</enum>
     </property>
     <property name="text">
-     <string>Display 5</string>
+     <string>Display 3</string>
     </property>
   </widget>
   <widget class="QLabel" name="display_6">

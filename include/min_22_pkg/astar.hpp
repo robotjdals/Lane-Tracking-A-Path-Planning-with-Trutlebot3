@@ -60,7 +60,7 @@ public:
     double res_=0.05;       // m/px (PGM 해상도)
     cv::Point2d origin_m_{0,0}; // 맵좌표의 (0,0)에 해당하는 월드(m)
 
-    //static constexpr double pixel_to_meter = -0.0018;
+    //static constexpr double pixel_to_meter = 0.0018;
 
 private:
     mutable std::mutex map_mutex;

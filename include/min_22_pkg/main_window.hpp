@@ -41,6 +41,11 @@ class MainWindow : public QMainWindow {
   void showMapUI() { if (ui) ui->display_5->setVisible(true); }
   void hideMapUI() { if (ui) ui->display_5->setVisible(false); }
 
+  /*
+  bool system_running = false;        // 시스템 동작 상태 (true=동작, false=정지)
+  int red_detection_threshold = 1000; // 빨간색 픽셀 임계값
+  */
+
  public Q_SLOTS:
   void slotUpdateImg();
   void processWaypoints();
@@ -51,6 +56,8 @@ class MainWindow : public QMainWindow {
   cv::Mat sumImg(cv::Mat img1, cv::Mat img2);
   cv::Mat white_hsv(cv::Mat& img);
   cv::Mat yellow_hsv(cv::Mat& img);
+  //cv::Mat red_hsv(cv::Mat& img);
+  //bool detectRedSignal();                           // 빨간색 신호 감지
   int left_line(cv::Mat original);
   int right_line(cv::Mat original);
   std::vector<int> getWindowSearch(cv::Mat& searchimg, int& left_x, int& right_x);
