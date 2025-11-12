@@ -16,15 +16,14 @@
 class Astar {
 public:
     struct AstarNode {
-    int x, y;                              // 그리드 좌표
+    int x, y;
     double g_cost;                         // 시작점부터의 실제 비용
     double h_cost;                         // 목표점까지의 추정 비용 (휴리스틱)
     double f_cost;                         // g_cost + h_cost (총 비용)
-    double detour_score;                   // 우회 점수 (직선에서 벗어날수록 높음)
     std::shared_ptr<AstarNode> parent;     // 부모 노드 (경로 추적용)
 
     AstarNode(int x_, int y_, double g_, double h_)
-        : x(x_), y(y_), g_cost(g_), h_cost(h_), f_cost(g_ + h_), detour_score(0.0), parent(nullptr) {}
+        : x(x_), y(y_), g_cost(g_), h_cost(h_), f_cost(g_ + h_), parent(nullptr) {}
 };
 
     Astar();
@@ -70,17 +69,6 @@ private:
     cv::Mat occ_;           // 장애물:255, 자유:0 (binary)
 
     inline int idx(int x,int y) const { return y*W_ + x; }
-
-    // A* 내부 노드
-    struct Node { int x,y; double g,f; int parent_idx; };
-/*
-    void notifyVisualizationUpdate() {
-        if (visualization_callback) {
-            visualization_callback();
-        }
-    }*/
-
-
     size_t getNodeKey(int x, int y) const { return y * W_ + x; } // 맵 크기 W_ 사용
 
     cv::Mat dist_map_m_;          // 자유공간 각 셀의 최근접 장애물까지 거리 [m]
@@ -92,14 +80,6 @@ private:
     int dx[4]     = { 0,  1,  0, -1};
     int dy[4]     = { 1,  0, -1,  0};
     double costs[4]= { 1.0, 1.0, 1.0, 1.0};
-/*
-    static constexpr int dx_[8] = {0, 1, 0, -1, 1, 1, -1, -1};
-    static constexpr int dy_[8] = {1, 0, -1, 0, 1, -1, 1, -1};
-    static constexpr double move_costs_[8] = {
-        1.0, 1.0, 1.0, 1.0,                    // 상하좌우: 1.0
-        1.4142135623730951, 1.4142135623730951, // 대각선: √2
-        1.4142135623730951, 1.4142135623730951
-    };*/
 };
 
 #endif

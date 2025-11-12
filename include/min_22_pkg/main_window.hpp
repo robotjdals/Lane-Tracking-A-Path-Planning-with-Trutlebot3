@@ -38,8 +38,8 @@ class MainWindow : public QMainWindow {
   bool left_detected = false;
 
   // UI 제어 함수들
-  void showMapUI() { if (ui) ui->display_5->setVisible(true); }
-  void hideMapUI() { if (ui) ui->display_5->setVisible(false); }
+  void showMapUI() { if (ui) ui->display_8->setVisible(true); }
+  void hideMapUI() { if (ui) ui->display_8->setVisible(false); }
 
   /*
   bool system_running = false;        // 시스템 동작 상태 (true=동작, false=정지)

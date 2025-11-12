@@ -84,7 +84,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
   }
 
   // 맵 시각화 UI 초기에는 숨김
-  ui->display_3->setVisible(false);
+  //ui->display_3->setVisible(false);
 
   QObject::connect(qnode, SIGNAL(rosShutDown()), this, SLOT(close()));
   QObject::connect(qnode, SIGNAL(sigRcvImg()), this, SLOT(slotUpdateImg()));
@@ -122,10 +122,14 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
   //yellow_imgs(display1_img);
   Gaussain_Filter(display_img);
   combine_img = sumImg(white_hsv(display_img), yellow_hsv(display_img));
+
+  QImage RGB_im5((const unsigned char*)(combine_img.data), combine_img.cols, combine_img.rows, QImage::Format_Grayscale8);
+  ui->display_5->setPixmap(QPixmap::fromImage(RGB_im5));
+
   perspective_transform(combine_img, Perspective_img);
 
-  QImage RGB_im2((const unsigned char*)(Perspective_img.data), Perspective_img.cols, Perspective_img.rows, QImage::Format_Grayscale8);
-  //ui->display_3->setPixmap(QPixmap::fromImage(RGB_im2));
+  QImage RGB_im6((const unsigned char*)(Perspective_img.data), Perspective_img.cols, Perspective_img.rows, QImage::Format_Grayscale8);
+  ui->display_6->setPixmap(QPixmap::fromImage(RGB_im6));
 
   cv::Mat window_img = Perspective_img.clone();
 
@@ -160,7 +164,7 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
 
     if (show_map) {
         // UI 표시
-        ui->display_3->setVisible(true);
+        ui->display_8->setVisible(true);
 
         cv::Mat grid_map;
 
@@ -187,21 +191,21 @@ void MainWindow::slotUpdateImg() {  //UI에 캠화면 출력
             QPixmap pixmap = QPixmap::fromImage(qimg);
 
             // UI 크기에 맞게 스케일링 (비율 유지)
-            QPixmap scaled_pixmap = pixmap.scaled(ui->display_3->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            QPixmap scaled_pixmap = pixmap.scaled(ui->display_8->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
             // 스케일링 디버그 출력 제거
 
-            ui->display_3->setPixmap(scaled_pixmap);
+            ui->display_8->setPixmap(scaled_pixmap);
         }
     } else {
         // PLANNING/PATH_TRACK/AVOIDANCE 상태가 아니면 UI 숨김
-        ui->display_3->setVisible(false);
+        ui->display_8->setVisible(false);
     }
   }
 
 
-  QImage RGB_im3((const unsigned char*)(Perspective_img.data), Perspective_img.cols, Perspective_img.rows, QImage::Format_Grayscale8);
-  ui->display_4->setPixmap(QPixmap::fromImage(RGB_im3));
+  QImage RGB_im7((const unsigned char*)(Perspective_img.data), Perspective_img.cols, Perspective_img.rows, QImage::Format_Grayscale8);
+  ui->display_7->setPixmap(QPixmap::fromImage(RGB_im7));
   if (qnode->imgRaw) {
     delete qnode->imgRaw;// 동적 할당된 원본 이미지 메모리 해제
     qnode->imgRaw = nullptr;
@@ -247,8 +251,8 @@ cv::Mat MainWindow::white_hsv(cv::Mat& img) {
   cv::Mat binaryImage;
   cv::inRange(hsvImg, lower, upper, binaryImage);
 
-  //QImage RGB_im3((const unsigned char*)(binaryImage.data), binaryImage.cols, binaryImage.rows, QImage::Format_Grayscale8);
-  //ui->display_4->setPixmap(QPixmap::fromImage(RGB_im3));
+  QImage RGB_im4((const unsigned char*)(binaryImage.data), binaryImage.cols, binaryImage.rows, QImage::Format_Grayscale8);
+  ui->display_4->setPixmap(QPixmap::fromImage(RGB_im4));
 
   return binaryImage;
 }
@@ -268,8 +272,8 @@ cv::Mat MainWindow::yellow_hsv(cv::Mat& img) {
   cv::Mat binaryImage;
   cv::inRange(hsvImg, lower, upper, binaryImage);
 
-  //QImage RGB_im4((const unsigned char*)(binaryImage.data), binaryImage.cols, binaryImage.rows, QImage::Format_Grayscale8);
-  //ui->display_5->setPixmap(QPixmap::fromImage(RGB_im4));
+  QImage RGB_im3((const unsigned char*)(binaryImage.data), binaryImage.cols, binaryImage.rows, QImage::Format_Grayscale8);
+  ui->display_3->setPixmap(QPixmap::fromImage(RGB_im3));
 
   return binaryImage;
 }

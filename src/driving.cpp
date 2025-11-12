@@ -9,7 +9,7 @@
 
 Driving::Driving(QObject* parent) : QObject(parent) {
   qnode = nullptr;
-  current_speed = 0.08;  // 🔧 기본 속도 8cm/s로 설정
+  current_speed = 0.08;  //기본 속도 8cm/s
   has_avoidance_goal = false;
   state = LANE_TRACKING;
 }
@@ -27,7 +27,6 @@ void Driving::setPlanner(Astar* planner) {
 }
 
 void Driving::go(const std::vector<int>& waypoints){
-  // 1. Odometry 수신 대기 (글로벌 플래닝 필수)
   if (qnode && !qnode->odom_received) {
     drive(0.0, 0.0);
     return;
@@ -46,7 +45,7 @@ void Driving::go(const std::vector<int>& waypoints){
         return;
       }*/
 
-      // === 1. 차선 추종 모드 ===
+      // === 차선 추종 모드 ===
       if(qnode && qnode->detectObstacle(0.4, 0.3)){
 
         if (main_window) {
@@ -99,7 +98,7 @@ void Driving::go(const std::vector<int>& waypoints){
     case RETURN_LANE:
     {
       static int return_counter = 0;
-      if (return_counter < 10) { // 10프레임 정도 정지 후
+      if (return_counter < 10) { // 10프레임 정도 정지
         qnode->drive(0.0, 0.0);
         return_counter++;
       } else {
@@ -132,9 +131,9 @@ void Driving::tracking(const std::vector<int>& waypoints){
 }
 
   cv::Vec3d coeffients = curve_fitting(target_idx);
-  double a = coeffients[0];
-  double b = coeffients[1];
-  double c = coeffients[2];
+  double a = coeffients[0]; //곡률계수(얼마나 휘었는지)
+  double b = coeffients[1]; //기울기(방향)
+  double c = coeffients[2]; //y절편(로봇의 횡방향 크기)
 
   double curvature = std::abs(a);
   target_speed = changedspeed(curvature, current_speed);
@@ -253,7 +252,7 @@ void Driving::drive(double linear_x, double angular_z){
     qnode->drive(linear_x, angular_z);
 }
 
-// 완전한 회피 경로 계획 함수
+// 회피 경로 계획 함수
 bool Driving::planCompleteAvoidancePath() {
   if (!a_planner || !qnode || !qnode->odom_received) {
       return false;
@@ -271,9 +270,6 @@ bool Driving::planCompleteAvoidancePath() {
   //cv::Point2f final_goal(1.764391, 1.396047); // 장애물 옆
   cv::Point2f final_goal(1.506287, 1.752307); //장애물 뒤
   //cv::Point2f final_goal(1.786765, 1.678603);
-
-  //final_goal.x -= offset * std::cos(yaw);
-  //final_goal.y -= offset * std::sin(yaw);
 
   cv::Point2i robot_grid = a_planner->worldToGrid(start_pos.x, start_pos.y);
   cv::Point2i goal_grid = a_planner->worldToGrid(final_goal.x, final_goal.y);
@@ -317,21 +313,20 @@ void Driving::startPathTracking(){
 bool Driving::executePathStep(){
   if(state != PATH_TRACK || !qnode) return false;
 
-  // 🌍 현재 로봇 포즈 (절대 위치)
+  // 현재 로봇 포즈 (절대 위치)
   double rx = qnode->odom_x;  // [m]
   double ry = qnode->odom_y;  // [m]
   double rth = qnode->odom_yaw; // [rad]
 
   // 다음 목표 웨이포인트 선택 (Lookahead)
-  // 현재 위치에서 Lookahead 거리보다 멀리 떨어진 웨이포인트를 찾습니다.
   while(wp_idx_ + 1 < path_m_.size()){
     double dx = path_m_[wp_idx_].x - rx;
     double dy = path_m_[wp_idx_].y - ry;
-    if (std::hypot(dx,dy) > lookahead_ * 1.2) break; // Lookahead 거리보다 1.5배 멀 때
+    if (std::hypot(dx,dy) > lookahead_ * 1.2) break; // Lookahead 거리보다 1.2배 멀 때
     wp_idx_++;
   }
-  // 최종 목표점에 도달했는지 확인
 
+  // 최종 목표점에 도달했는지 확인
     double final_dx = path_m_.back().x - rx;
     double final_dy = path_m_.back().y - ry;
 
